@@ -89,9 +89,8 @@ pgrid <- function(x, nvalues=100, scale.factor=6, per.factor=1)
 
 ##################################################
 # Source likelihood functions
-##################################################\
+##################################################
 # source('likelihood_2017-06-26.r')
-
 
 ####################################################
 # Survival function for U (mixture progression time)
@@ -155,7 +154,7 @@ I.j <- function(theta, t, j){
 
 ####################################################
 # Interval-detected cancers: Likelihood contribution
-# After last screen
+# after last screen
 #
 # theta: model parameters
 # t:     vector of times 
@@ -251,7 +250,7 @@ EstPsiBMucstab4Full.fun <- function(x, y, t, z, clin.FU) {
   
   # NEW version with exact normalization terms
   n.f <- rep(CF.fun(theta, t[2]-t[1]), n.y)
-  QQ <- cumsum(d+ q )
+  QQ <- cumsum(d+q)
   n.f[2:n.y] <- n.f[2:n.y]-QQ[1:(n.y-1)]
   fin <- 0
   
@@ -270,8 +269,6 @@ EstPsiBMucstab4Full.fun <- function(x, y, t, z, clin.FU) {
   fin <- fin-(y[n.y, 3]-y[n.y, 1]-sum(clin.FU))*log(1-d[n.y]/n.f[n.y]-sum(p)/n.f[n.y])    
   return(fin)
 }
-
-
 
 ##################################################
 # Calculate profile likelihoods
@@ -349,8 +346,6 @@ plikelihood <- function(x0,
   return(LL)
 }
 
-
-
 ##################################################
 # Control default plotting theme aesthetics
 ##################################################
@@ -376,10 +371,9 @@ pframe <- function(p.grid, p.like, parname, simulation=NA)
   data.frame(param=p.grid[, parname],
              NLL=pmax(p.like[, parname], 0),
              simulation=simulation)
-
 ```
 
-```{r}
+```{r multiplot-function}
 # Multiple plot function
 #
 # ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
@@ -426,7 +420,6 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   }
 }
 ```
-
 
 ```{r figure1}
 ##################################################
@@ -594,10 +587,9 @@ dset <- rbind(transform(result_mat_55, followup=55),
 apiplot(dset, par1='psi', par2='lambda', responses=c('IdM', 'LRM'))
 ```
 
-**FIGURE 2: Adequately Precise Identification (API) and Type I/II Errors.** Model performance over a range of values for the indolent fraction ($\psi$) and the progression rate of progressive cancers ($\lambda$) visualized as (top row) percentages of 100 simulations achieving joint API for all four model parameters and (bottom row) percentages of 100 simulations that reject the null hypothesis $\mathcal{H}_0: \psi=0$. Performance is visualized for 50,000 women screened annually at ages 50--54 years with follow-up to age 55 years (left column) and age 60 years (right column), assuming a constant risk of onset of preclinical cancer of $w=0.0025$ per year, and sensitivity of screening to detect preclinical cancer of $\beta=80\%$.
+**FIGURE 2: Adequately Precise Identification (API) and type I/II errors.** Model performance over a range of values for the indolent fraction ($\psi$) and the progression rate of progressive cancers ($\lambda$) visualized as (top row) percentages of 100 simulations achieving joint API for all four model parameters and (bottom row) percentages of 100 simulations that reject the null hypothesis $\mathcal{H}_0: \psi=0$. Performance is visualized for 50,000 women screened annually at ages 50--54 years with follow-up to age 55 years (left column) and age 60 years (right column), assuming a constant risk of onset of preclinical cancer of $w=0.0025$ per year, and sensitivity of screening to detect preclinical cancer of $\beta=80\%$.
 
 \newpage
-
 
 ```{r figure3a, echo=FALSE, cache=TRUE}
 ##################################################
@@ -640,20 +632,19 @@ apanel <- function(dset){
                           colour=psi),
                       size=4)
   gg <- gg+scale_x_continuous(name='Years of follow-up after last screen',
-                              limits=c(1, 10),
+                              limits=c(0, 10),
                               breaks=seq(0, 14, by=2))
   gg <- gg+scale_y_continuous(name='Runs achieving API',
+                              limits=c(0, 1),
                               breaks=seq(0, 1, by=0.2),
                               labels=percent_format())
   gg <- gg+scale_colour_grey()
   return(gg)
 }
 
-aaa<-psi.dat
+aaa <- psi.dat
 #print(apanel(psi.dat))
 ```
-
-
 
 ```{r figure3b, echo=FALSE, cache=TRUE}
 ##################################################
@@ -679,48 +670,18 @@ fu.years <- FU.bound-screen.vec[length(screen.vec)]
 psi.dat <- cbind(psi.dat, fu.years)
 
 ##################################################
-# Illustrate simulations achieving API
+# Juxtapose simulations with mean sojourn times of
+# 6 months or 4 years using multiplot
 ##################################################
-apanel <- function(dset){
-  dset <- transform(dset, psi=factor(psi))
-  gg_theme(legend.position='none')
-  gg <- ggplot(data=dset)
-  gg <- gg+geom_line(aes(x=fu.years,
-                         y=api/100,
-                         group=psi,
-                         colour=psi),
-                     size=1)
-  gg <- gg+geom_point(aes(x=fu.years,
-                          y=api/100,
-                          group=psi,
-                          colour=psi),
-                      size=4)
-  gg <- gg+scale_x_continuous(name='Years of follow-up after last screen',
-                              limits=c(1, 10),
-                              breaks=seq(0, 14, by=2))
-  gg <- gg+scale_y_continuous(name='Runs achieving API',
-                              breaks=seq(0, 1, by=0.2),
-                              labels=percent_format())
-  gg <- gg+scale_colour_grey()
-  return(gg)
-}
-bbb<-psi.dat
-#print(apanel(psi.dat))
+bbb <- psi.dat
+multiplot(apanel(aaa), apanel(bbb), cols=2)
 ```
 
-```{r}
-## print it
-
-multiplot(apanel(aaa),apanel(bbb), cols = 2)
-```
-
-**FIGURE 3: API as a Function of Follow Up.** Percentages of simulations (n=100) achieving joint API for all four model parameters in a stop-screen trial with 50,000 women screened annually at ages 50--54 years, by years of follow-up after the last screen. Mean sojourn time of 6 months (A) and 4 years (B), respectively. Lines connect evaluations under $\psi$ set equal to (dark) 20%, (medium) 40%, and (light) 60%, assuming a constant rate of onset of preclinical cancer of $w=0.0025$ per year, and sensitivity of screening to detect preclinical cancer of $\beta=80\%$.
-
+**FIGURE 3: API as a function of follow up.** Percentages of simulations (n=100) achieving joint API for all four model parameters in a stop-screen trial with 50,000 women screened annually at ages 50--54 years, by years of follow-up after the last screen. Mean sojourn time of (A) 6 months and (B) 4 years. Lines connect evaluations under $\psi$ set equal to (dark) 20%, (medium) 40%, and (light) 60%, assuming a constant rate of onset of preclinical cancer of $w=0.0025$ per year, and sensitivity of screening to detect preclinical cancer of $\beta=80\%$.
 
 \newpage
 
-
-```{r simulations,cache=TRUE, echo=FALSE}
+```{r simulations, cache=TRUE, echo=FALSE}
 ##################################################
 # Fixed simulation study parameters
 ##################################################
@@ -728,8 +689,7 @@ x.vec <- c(psi=0.6, lambda=2, w=0.0025, beta=0.8)
 x0 <- c(psi=0.5, lambda=1, w=1/100, beta=0.5)
 xl <- c(psi=0, lambda=0, w=0, beta=0)
 xu <- c(psi=1, lambda=5, w=5, beta=1)
-
-sss=444
+sss <- 444
 
 ##################################################
 # Simulation 1
@@ -776,13 +736,10 @@ p.psi.4 <- pframe(p.grid, p.like, 'psi', 4)
 p.lambda.4 <- pframe(p.grid, p.like, 'lambda', 4)
 ```
 
-
 ```{r figure4, cache=TRUE, echo=FALSE}
 ##################################################
 # Merged results across simulations
 ##################################################
-
-
 p.psi <- rbind(p.psi.1, p.psi.2, p.psi.3, p.psi.4)
 p.lambda <- rbind(p.lambda.1, p.lambda.2, p.lambda.3, p.lambda.4)
 
@@ -824,9 +781,7 @@ grid.arrange(spanel(x.vec, p.psi, 'psi'),
              layout_matrix=matrix(c(1, 2), ncol=2, byrow=TRUE))
 ```
 
-**FIGURE 4:** Profile likelihoods of $\psi$ and $\lambda$ for representative realizations of the $\psi=60\%$ scenario in Figure 3A. With 0 years follow up (black lines), $\lambda$ is practically non-identifiable. With 2 years follow up (dark grey lines), $\lambda$ is practially identifiable, but does not satisfy API. With 4 and 6 years of follow up (grey and light grey lines), $\lambda$ is clearly API. The remaining parameters $\beta$ and $w$ are API under all considered follow up scenarios (results not shown). Simulation parameters as follows: $n=50,000$ trial participants, $\lambda=2$, $w=0.0025$ and $\beta=80\%$.
-
-
+**FIGURE 4: Identifiability as a function of follow up.** Profile likelihoods of $\psi$ and $\lambda$ for representative realizations of the $\psi=60\%$ scenario in Figure 3A. With 0 years follow up (black lines), $\lambda$ is practically non-identifiable. With 2 years follow up (dark grey lines), $\lambda$ is practially identifiable, but does not satisfy API. With 4 and 6 years of follow up (grey and light grey lines), $\lambda$ is clearly API. The remaining parameters $\beta$ and $w$ are API under all considered follow up scenarios (results not shown). Simulation parameters as follows: $n=50,000$ trial participants, $\lambda=2$, $w=0.0025$ and $\beta=80\%$.
 
 \newpage
 
@@ -873,8 +828,7 @@ grid.arrange(mpanel(x.vec, mis.dat, 'w'),
 
 \newpage
 
-
-```{r figure cnbss profile likelihoods, results='asis'}
+```{r figure-cnbss-profile-likelihoods, results='asis'}
 ##################################################
 # Analysis of CNBSS-2 for Ages 50-59
 # Onset at age 45
@@ -885,12 +839,9 @@ ind.FU <- 1  # clinical follow up
 # Read saved trial data
 ##################################################
 source('trials_FU.r')
-
-
 t.vec <- c(45, 55, 56, 57, 58, 59, 59+ind.FU)
 cnbss.combo <- cnbss50
 clin.FU <- FU.50
-
 
 ##################################################
 # Initial values and limits for optimization algorithm
@@ -898,7 +849,6 @@ clin.FU <- FU.50
 x0 <- c(psi=0.2, lambda=.05, w=1/1000, beta=.6)
 xl <- c(psi=0, lambda=0, w=0, beta=0)
 xu <- c(psi=1, lambda=10, w=5, beta=1)
-
 
 ##################################################
 # Profile likelihoods for mixture model
@@ -918,38 +868,32 @@ mixture <- arrangeGrob(ppanel(f.like$params, p.grid, p.like, 'psi', xmax=1),
                                             ncol=2,
                                             byrow=TRUE))
 
-
 ##################################################
 # Summarize point estimates and 95% profile CIs
 ##################################################
-
 plot(mixture)
 ```
 
-
-
-
-
-**Figure 6: Profile likelihood for CNBSS-2: mixture model.**Relative negative log-likelihoods (NLL) based on fitting the mixture model to CNBSS-2 data (see Table S1). Vertical dashed lines correspond to maximum likelihood estimates. Intersection of relaitve NLL with horizontal dotted lines indicate the profile-based  95% confidence intervals. 
-
-
+**Figure 6: Profile likelihood for CNBSS-2: mixture model.** Relative negative log-likelihoods (NLL) based on fitting the mixture model to CNBSS-2 data (see Table S1). Vertical dashed lines correspond to maximum likelihood estimates. Intersection of relaitve NLL with horizontal dotted lines indicate the profile-based  95% confidence intervals. 
 
 \newpage 
 
 ## SUPPLEMENTARY FIGURES AND TABLES
 
-```{r CNBSS table, results='asis', echo=FALSE}
+```{r cnbss2-data-table, results='asis', echo=FALSE}
+# Like Table 1 in Shen et al. (2017) but including 5th screening round
 source('trials_FU.R')
-
-cnbprint=data.frame(Round=c(1,2,3,4,5))
-cnbprint<-cbind(cnbprint, cnbss50)
-colnames(cnbprint)<- c('Round', 'Screen','Interval' , 'n')
-print(xtable(cnbprint, digits=0), include.rownames = FALSE, hline.after=0,comment=FALSE, sanitize.colnames.function=function(x) {x})
-
-# Like Table 1 in Shen et al. (2017); without HIP, but including 5th screening round for  CNBSS40 and CNBSS50
+cnbprint <- data.frame(Round=c(1, 2, 3, 4, 5))
+cnbprint <- cbind(cnbprint, cnbss50)
+colnames(cnbprint) <- c('Round', 'Screen', 'Interval', 'n')
+print(xtable(cnbprint, digits=0),
+      include.rownames=FALSE,
+      hline.after=0,
+      comment=FALSE,
+      sanitize.colnames.function=function(x) {x})
 ```
 
-**Table S1: CNBSS-2 Data.** Grouped data from the Canadian Breast Cancer Screening Study-2 [Miller et al., CMAJ, 1992]. Round: screening round; Screen: number of screen-detected cases; Interval: number of interval cases; n: number of women who attended all screening rounds up to and including the current round.
+**Table S1: CNBSS-2 data.** Grouped data from the Canadian Breast Cancer Screening Study-2 [Miller et al., CMAJ, 1992]. Round: screening round; Screen: number of screen-detected cases; Interval: number of interval cases; n: number of women who attended all screening rounds up to and including the current round.
 
 \newpage
 
@@ -959,12 +903,14 @@ print(xtable(cnbprint, digits=0), include.rownames = FALSE, hline.after=0,commen
 # to sample size
 ##################################################
 sizeplot <- function(dset, par1, par2, response){
-  melted <- melt(dset, id.vars=c(par1, par2, 'size'))
+  melted <- melt(dset, id.vars=c(par1, par2, 'followup'))
   melted <- transform(melted,
                       measure=sub('^([^_]*)_([^_]*)$', '\\1', variable),
                       variable=sub('^([^_]*)_([^_]*)$', '\\2', variable))
-  melted <- transform(melted, variable=factor(variable,
-                                              levels=c('psi', 'lambda', 'w', 'beta')))
+  melted <- transform(melted,
+                      variable=factor(variable,
+                                      levels=c('psi', 'lambda', 'w', 'beta')),
+                      value=log10(abs(value)))
   melted <- subset(melted, measure == response, select=-measure)
   gg_theme(axis.title=element_text(size=18),
            axis.title.y=element_text(size=18, angle=0, vjust=0.5),
@@ -972,17 +918,18 @@ sizeplot <- function(dset, par1, par2, response){
            strip.text.y=element_text(angle=0, size=14))
   gg <- ggplot(data=melted, aes_string(x=par1, y=par2))
   gg <- gg+geom_raster(aes(fill=value), interpolate=FALSE)
-  gg <- gg+facet_grid(variable~size, labeller=label_parsed)
+  gg <- gg+facet_grid(variable~followup, labeller=label_parsed)
   gg <- gg+scale_x_continuous(name=parse(text=par1),
+                              breaks=seq(0, 0.75, by=0.25),
                               labels=percent_format(),
                               expand=c(0, 0))
   gg <- gg+scale_y_log10(name=parse(text=par2),
                          breaks=c(0.1, 0.5, 1.0, 2.0),
                          expand=c(0, 0))
   gg <- gg+scale_fill_gradient(name='',
-                               low='black',
-                               high='white',
-                               expand=c(0, 0),
+                               low='white',
+                               high='black',
+                               trans='exp',
                                guide=guide_colorbar(draw.ulim=FALSE,
                                                     draw.llim=FALSE,
                                                     label.hjust=1))
@@ -998,24 +945,24 @@ result_mat_55 <- result_mat
 load(file.path(loadpath, 'Systematic_IA_60', 'Exp_60_bias_se.RData'))
 result_mat_60 <- result_mat
 
-dset <- rbind(transform(result_mat_55, size='n==50000'),
-              transform(result_mat_60, size='n==50000'))
+dset <- rbind(transform(result_mat_55, followup=55),
+              transform(result_mat_60, followup=60))
 ```
 
-```{r sample-size-bias, , echo=FALSE}
+```{r sample-size-bias, echo=FALSE}
 ##################################################
-# Read and merge saved results of bias and SEs
+# Illustrate sensitivity of bias to follow-up
 ##################################################
 sizeplot(dset, par1='psi', par2='lambda', response='bias')
 ```
 
-**FIGURE S1: Sensitivity of bias to follow up.** Bias for all four model parameters assuming 50,000 women were screened annually at ages 50--54 years with follow-up to age 55 and 60 years, respectively. Screening test sensitivity was   set to $\beta=80\%$.
+**FIGURE S1: Sensitivity of bias to follow up.** Absolute bias for all four model parameters assuming 50,000 women were screened annually at ages 50--54 years with follow-up to age 55 and 60 years, respectively. Screening test sensitivity was   set to $\beta=80\%$.
 
 \newpage
 
-```{r sample-size-se, , echo=FALSE}
+```{r sample-size-se, echo=FALSE}
 ##################################################
-# Read and merge saved results of bias and SEs
+# Illustrate sensitivity of SEs to follow-up
 ##################################################
 sizeplot(dset, par1='psi', par2='lambda', response='SE')
 ```
@@ -1074,11 +1021,11 @@ grid.arrange(mpanel(x.vec, mis.dat, 'w'),
 **FIGURE S3: Model misspecification.** Violin plots of maximum likelihood estimates for parameters in a progressive model (i.e., one that assumes $\psi=0$) fit to data generated using a mixture model with selected values of $\psi\ge0$ assuming 50,000 women were screened annually at ages 50--54 with follow-up to age 60 years and the screening test has 40% sensitivity. Results based on n=200 simulations per $\psi$-value.
 
 \newpage 
+
 ```{r}
 #######################################################
-# prepare for the CI calculation for CNBSS-2
+# Prepare for the CI calculation for CNBSS-2
 #######################################################
-
 plikelihood_fix <- function(x0,
                             xl,
                             xu,
@@ -1092,7 +1039,7 @@ plikelihood_fix <- function(x0,
                             problem=0,
                             noindolent=FALSE){
   nvalues <- nrow(p.grid)
-  psi_fix<-z[2]
+  psi_fix <- z[2]
   if(all(is.na(fopt)))
     fopt <- flikelihood(x0,
                         xl,
@@ -1100,7 +1047,7 @@ plikelihood_fix <- function(x0,
                         t.vec,
                         trial.data,
                         last.screen,
-                        z=c(1,psi_fix),
+                        z=c(1, psi_fix),
                         likelihood=likelihood)
   LL <- data.frame(psi=numeric(nvalues),
                    lambda=numeric(nvalues),
@@ -1134,15 +1081,12 @@ plikelihood_fix <- function(x0,
   return(LL)
 }
 
-
-
 progressive <- arrangeGrob(ppanel(f.like$params, p.grid, p.like, 'lambda', xmax=2),
                            ppanel(f.like$params, p.grid, p.like, 'w', xmax=0.005),
                            ppanel(f.like$params, p.grid, p.like, 'beta'),
                            layout_matrix=matrix(c(1, 2, 3),
                                                 ncol=3,
                                                 byrow=TRUE))
-
 
 ptable <- function(f.like, p.grid, p.like){
   ests <- f.like$params
@@ -1169,54 +1113,58 @@ ptable <- function(f.like, p.grid, p.like){
         comment=FALSE,
         sanitize.rownames.function=function(x) {x})
 }
-
 ```
 
-
-
-
-```{r cnbss-2 table 1, results='asis', echo=FALSE, comment=FALSE}
-
-# Here, we fx psi at different values and find the MLE and GoF
-
-psi_fix<-c(0,.05,.1,.2,.4)
-l.p<-length(psi_fix)
-
-
-table_cnbss.1<-data.frame(psi=psi_fix, lambda=numeric(l.p), lambda.CI.lr=numeric(l.p), lambda.CI.up=numeric(l.p), w=numeric(l.p), w.CI.lr=numeric(l.p), w.CI.up=numeric(l.p), beta=numeric(l.p), beta.CI.lr=numeric(l.p),beta.CI.up=numeric(l.p), statistic=numeric(l.p), p_value=numeric(l.p))
-
+```{r cnbss2-table1, results='asis', echo=FALSE, comment=FALSE}
+# Here, we fix psi at different values and find the MLE and GoF
+psi_fix <- c(0, 0.05, 0.1, 0.2, 0.4)
+l.p <- length(psi_fix)
+table_cnbss.1 <- data.frame(psi=psi_fix,
+                            lambda=numeric(l.p),
+                            lambda.CI.lr=numeric(l.p),
+                            lambda.CI.up=numeric(l.p),
+                            w=numeric(l.p),
+                            w.CI.lr=numeric(l.p),
+                            w.CI.up=numeric(l.p),
+                            beta=numeric(l.p),
+                            beta.CI.lr=numeric(l.p),
+                            beta.CI.up=numeric(l.p),
+                            statistic=numeric(l.p),
+                            p_value=numeric(l.p))
 cnbss50 <- matrix(c(142, 15, 19711,
-                    66, 10, 17669,
-                    43,  9, 17347,
-                    54,  9, 17193,
-                    28, 5, 9876),
+                     66, 10, 17669,
+                     43,  9, 17347,
+                     54,  9, 17193,
+                     28,  5, 9876),
                   byrow=TRUE,
                   ncol=3)
-t.vec<-c(45,55,56,57,58,59,60)
-n.y=dim(cnbss50)[1]
-
-
+t.vec <- c(45, 55, 56, 57, 58, 59, 60)
+n.y <- dim(cnbss50)[1]
 
 ##################################################
 # MLE
 ##################################################
-
 for(k in 1:dim(table_cnbss.1)[1]){
-  
   #########
   # MLE
   #########
-  f.like <- flikelihood(x0[-psi], xl[-psi], xu[-psi], t.vec, cnbss50, clin.FU, z=c(1, table_cnbss.1$psi[k]))
-  table_cnbss.1$lambda[k]<-f.like$params[1]
-  table_cnbss.1$w[k]<-f.like$params[2]
-  table_cnbss.1$beta[k]<-f.like$params[3]
+  f.like <- flikelihood(x0[-psi],
+                        xl[-psi],
+                        xu[-psi],
+                        t.vec,
+                        cnbss50,
+                        clin.FU,
+                        z=c(1, table_cnbss.1$psi[k]))
+  table_cnbss.1$lambda[k] <- f.like$params[1]
+  table_cnbss.1$w[k] <- f.like$params[2]
+  table_cnbss.1$beta[k] <- f.like$params[3]
   
   #########
   # CI
   #########
   psi_fix=table_cnbss.1$psi[k]
   p.grid <- transform(pgrid(c(psi=psi_fix, f.like$params), scale.factor=5), psi=psi_fix)
-  p.like <- plikelihood_fix(x0, xl, xu, t.vec, cnbss50, clin.FU, p.grid, f.like, z=c(1, psi_fix),noindolent=TRUE)
+  p.like <- plikelihood_fix(x0, xl, xu, t.vec, cnbss50, clin.FU, p.grid, f.like, z=c(1, psi_fix), noindolent=TRUE)
   
   ests <- f.like$params
   ptab <- NULL
@@ -1226,109 +1174,111 @@ for(k in 1:dim(table_cnbss.1)[1]){
     upper <- ifelse(limits[2] == p.grid[nrow(p.grid), parname], NA, limits[2])
     ptab <- rbind(ptab, c(lower, upper))
   }
-  
-  table_cnbss.1$lambda.CI.lr[k]<-ptab[1,1]
-  table_cnbss.1$lambda.CI.up[k]<-ptab[1,2]
-  
-  table_cnbss.1$w.CI.lr[k]<-ptab[2,1]
-  table_cnbss.1$w.CI.up[k]<-ptab[2,2]
-  
-  table_cnbss.1$beta.CI.lr[k]<-ptab[3,1]
-  table_cnbss.1$beta.CI.up[k]<-ptab[3,2]
-  
+
+  table_cnbss.1$lambda.CI.lr[k] <- ptab[1, 1]
+  table_cnbss.1$lambda.CI.up[k] <- ptab[1, 2]
+ 
+  table_cnbss.1$w.CI.lr[k] <- ptab[2, 1]
+  table_cnbss.1$w.CI.up[k] <- ptab[2, 2]
+ 
+  table_cnbss.1$beta.CI.lr[k] <- ptab[3, 1]
+  table_cnbss.1$beta.CI.up[k] <- ptab[3, 2]
+ 
   #########
   ## GoF
   #########
-  
-  sc_ex<-rep(0,n.y)  
-  cl_ex<-rep(0,n.y)
-  
+
+  sc_ex <- rep(0, n.y)  
+  cl_ex <- rep(0, n.y)
+ 
   f.like <- flikelihood(x0[-psi], xl[-psi], xu[-psi], t.vec, cnbss50, clin.FU, z=c(1, table_cnbss.1$psi[k]))
-  
+ 
   # Compute the likelihoods
   v <- t(0:(n.y-1))
-  theta<-c(table_cnbss.1$psi[k],f.like$params)
+  theta <- c(table_cnbss.1$psi[k], f.like$params)
   d <- apply(v, 2, function(x) D.j(theta, t.vec, x))
   q <- apply(v, 2, function(x) I.j(theta, t.vec, x))
-  
+ 
   n.f <- rep(CF.fun(theta, t.vec[2]-t.vec[1]), n.y)
   QQ <- cumsum(d+q)
   n.f[2:n.y] <- n.f[2:n.y]-QQ[1:(n.y-1)]
-  
-  sc_ex<-d/n.f*cnbss50[,3]
-  cl_ex<-q/n.f*cnbss50[,3]
-  
-  X= sum((sc_ex-cnbss50[,1])^2/sc_ex) + sum((cl_ex-cnbss50[,2])^2/cl_ex ) # Xi square statistic
-  rem_ex<-cnbss50[,3]-sc_ex-cl_ex
-  rem_ob<-cnbss50[,3]-cnbss50[,1]-cnbss50[,2]
-  X=X+sum( (rem_ex-rem_ob)^2/rem_ex  )
-  table_cnbss.1$statistic[k]<-X
-  table_cnbss.1$p_value[k]=1-pchisq(X, df=2*n.y)
-  
+ 
+  sc_ex <- d/n.f*cnbss50[, 3]
+  cl_ex <- q/n.f*cnbss50[, 3]
+
+  # Xi square statistic
+  X <- sum((sc_ex-cnbss50[, 1])^2/sc_ex)+sum((cl_ex-cnbss50[, 2])^2/cl_ex)
+  rem_ex <- cnbss50[, 3]-sc_ex-cl_ex
+  rem_ob <- cnbss50[, 3]-cnbss50[, 1]-cnbss50[, 2]
+  X <- X+sum((rem_ex-rem_ob)^2/rem_ex)
+  table_cnbss.1$statistic[k] <- X
+  table_cnbss.1$p_value[k] <- 1-pchisq(X, df=2*n.y)
 }
-
-
 
 ##################################################
 # Output
 ##################################################
-
-colnames(table_cnbss.1)<-c('$\\psi$',  '$\\lambda$', '$\\lambda$ lr','$\\lambda$ up', '$w$', '$w$ lr', '$w$ up', '$\\beta$', '$\\beta$ lr', '$\\beta$ up', '$\\chi^2$', 'p-val')
-
-print(xtable(table_cnbss.1), digits=4, include.rownames = FALSE, hline.after=0,comment=FALSE, sanitize.colnames.function=function(x) {x})
-
-
-
+colnames(table_cnbss.1) <- c('$\\psi$',  '$\\lambda$', '$\\lambda$ lr', '$\\lambda$ up', '$w$', '$w$ lr', '$w$ up', '$\\beta$', '$\\beta$ lr', '$\\beta$ up', '$\\chi^2$', 'p-val')
+print(xtable(table_cnbss.1),
+      digits=4,
+      include.rownames=FALSE,
+      hline.after=0,
+      comment=FALSE,
+      sanitize.colnames.function=function(x) {x})
 ```
-
 
 **Table S2: CNBSS-2: parameter estimation and goodness of fit for constrained mixture model.** The mixture model with fixed fraction of indolent cancers $\psi$ is fit to the CNBSS-2 data (see Table S1). Onset of preclinical disease is assumed to be negligible before age $\Delta_0=45$ years.
 
 \newpage 
 
-```{r cnbss-2 table 2, results='asis', echo=FALSE}
-
+```{r cnbss2-table2, results='asis', echo=FALSE}
 # Here, vary the length of the time interval of positive onset away from 45 years
+t_fix <- c(20, 15, 10, 5)
+l.p <- length(t_fix)
+n.y <- dim(cnbss50)[1]
 
-t_fix<-c(20, 15, 10, 5)
-l.p<-length(t_fix)
-n.y=dim(cnbss50)[1]
-
-
-table_cnbss.1<-data.frame(age_onset=numeric(l.p), psi=numeric(l.p), psi.CI.lr=numeric(l.p), psi.CI.up=numeric(l.p), lambda=numeric(l.p), lambda.CI.lr=numeric(l.p), lambda.CI.up=numeric(l.p), w=numeric(l.p), w.CI.lr=numeric(l.p), w.CI.up=numeric(l.p), beta=numeric(l.p), beta.CI.lr=numeric(l.p),beta.CI.up=numeric(l.p), statistic=numeric(l.p), p_value=numeric(l.p))
-
+table_cnbss.1 <- data.frame(age_onset=numeric(l.p),
+                            psi=numeric(l.p),
+                            psi.CI.lr=numeric(l.p),
+                            psi.CI.up=numeric(l.p),
+                            lambda=numeric(l.p),
+                            lambda.CI.lr=numeric(l.p),
+                            lambda.CI.up=numeric(l.p),
+                            w=numeric(l.p),
+                            w.CI.lr=numeric(l.p),
+                            w.CI.up=numeric(l.p),
+                            beta=numeric(l.p),
+                            beta.CI.lr=numeric(l.p),
+                            beta.CI.up=numeric(l.p),
+                            statistic=numeric(l.p),
+                            p_value=numeric(l.p))
 cnbss50 <- matrix(c(142, 15, 19711,
-                    66, 10, 17669,
-                    43,  9, 17347,
-                    54,  9, 17193,
-                    28, 5, 9876),
+                     66, 10, 17669,
+                     43,  9, 17347,
+                     54,  9, 17193,
+                     28,  5, 9876),
                   byrow=TRUE,
                   ncol=3)
 
 for(k in 1:dim(table_cnbss.1)[1]){
-  
-  
-  t.vec<-c(55-t_fix[k],55,56,57,58,59,60)
-  table_cnbss.1$age_onset[k]<-t.vec[1]
+  t.vec <- c(55-t_fix[k], 55, 56, 57, 58, 59, 60)
+  table_cnbss.1$age_onset[k] <- t.vec[1]
   
   #########
   # MLE
   #########
   f.like <- flikelihood(x0, xl, xu, t.vec, cnbss50, clin.FU, z=c(0, 0))
-  
-  table_cnbss.1$psi[k]<-f.like$params[1]
-  table_cnbss.1$lambda[k]<-f.like$params[2]
-  table_cnbss.1$w[k]<-f.like$params[3]
-  table_cnbss.1$beta[k]<-f.like$params[4]
-  
+  table_cnbss.1$psi[k] <- f.like$params[1]
+  table_cnbss.1$lambda[k] <- f.like$params[2]
+  table_cnbss.1$w[k] <- f.like$params[3]
+  table_cnbss.1$beta[k] <- f.like$params[4]
   
   #########
   # CI
   ######### 
-  
   p.grid <- pgrid( f.like$params, scale.factor=5)
-  p.like <- plikelihood_fix(x0, xl, xu, t.vec, cnbss50, clin.FU, p.grid, f.like, z=c(0,0),noindolent=FALSE)
-  
+  p.like <- plikelihood_fix(x0, xl, xu, t.vec, cnbss50, clin.FU, p.grid, f.like, z=c(0, 0), noindolent=FALSE)
+ 
   ests <- f.like$params
   ptab <- NULL
   for(parname in names(ests)){
@@ -1337,57 +1287,58 @@ for(k in 1:dim(table_cnbss.1)[1]){
     upper <- ifelse(limits[2] == p.grid[nrow(p.grid), parname], NA, limits[2])
     ptab <- rbind(ptab, c(lower, upper))
   }
-  
-  
-  table_cnbss.1$psi.CI.lr[k]<-ptab[1,1]
-  table_cnbss.1$psi.CI.up[k]<-ptab[1,2]
-  
-  table_cnbss.1$lambda.CI.lr[k]<-ptab[2,1]
-  table_cnbss.1$lambda.CI.up[k]<-ptab[2,2]
-  
-  table_cnbss.1$w.CI.lr[k]<-ptab[3,1]
-  table_cnbss.1$w.CI.up[k]<-ptab[3,2]
-  
-  table_cnbss.1$beta.CI.lr[k]<-ptab[4,1]
-  table_cnbss.1$beta.CI.up[k]<-ptab[4,2]
-  
+ 
+  table_cnbss.1$psi.CI.lr[k] <- ptab[1, 1]
+  table_cnbss.1$psi.CI.up[k] <- ptab[1, 2]
+ 
+  table_cnbss.1$lambda.CI.lr[k] <- ptab[2, 1]
+  table_cnbss.1$lambda.CI.up[k] <- ptab[2, 2]
+ 
+  table_cnbss.1$w.CI.lr[k] <- ptab[3, 1]
+  table_cnbss.1$w.CI.up[k] <- ptab[3, 2]
+ 
+  table_cnbss.1$beta.CI.lr[k] <- ptab[4, 1]
+  table_cnbss.1$beta.CI.up[k] <- ptab[4, 2]
+ 
   ########
   # GoF
   ########
 
-  sc_ex<-rep(0,n.y)  
-  cl_ex<-rep(0,n.y)
-  
-  f.like <- flikelihood(x0, xl, xu, t.vec, cnbss50, clin.FU, z=c(0,0))
-  
-  
+  sc_ex <- rep(0, n.y)  
+  cl_ex <- rep(0, n.y)
+ 
+  f.like <- flikelihood(x0, xl, xu, t.vec, cnbss50, clin.FU, z=c(0, 0))
+ 
   # Compute the likelihoods
   v <- t(0:(n.y-1))
-  theta<-f.like$params
+  theta <- f.like$params
   d <- apply(v, 2, function(x) D.j(theta, t.vec, x))
   q <- apply(v, 2, function(x) I.j(theta, t.vec, x))
-  
+ 
   n.f <- rep(CF.fun(theta, t.vec[2]-t.vec[1]), n.y)
   QQ <- cumsum(d+q)
   n.f[2:n.y] <- n.f[2:n.y]-QQ[1:(n.y-1)]
-  
-  sc_ex<-d/n.f*cnbss50[,3]
-  cl_ex<-q/n.f*cnbss50[,3]
-  
-  X= sum((sc_ex-cnbss50[,1])^2/sc_ex) + sum((cl_ex-cnbss50[,2])^2/cl_ex ) # Xi square statistic
-  rem_ex<-cnbss50[,3]-sc_ex-cl_ex
-  rem_ob<-cnbss50[,3]-cnbss50[,1]-cnbss50[,2]
-  X=X+sum( (rem_ex-rem_ob)^2/rem_ex  )
-  table_cnbss.1$statistic[k]<-X
-  table_cnbss.1$p_value[k]=1-pchisq(X, df=2*n.y)
-  
+ 
+  sc_ex <- d/n.f*cnbss50[, 3]
+  cl_ex <- q/n.f*cnbss50[, 3]
+
+  # Xi square statistic
+  X <- sum((sc_ex-cnbss50[, 1])^2/sc_ex)+sum((cl_ex-cnbss50[, 2])^2/cl_ex)
+  rem_ex <- cnbss50[, 3]-sc_ex-cl_ex
+  rem_ob <- cnbss50[, 3]-cnbss50[, 1]-cnbss50[, 2]
+  X <- X+sum((rem_ex-rem_ob)^2/rem_ex)
+  table_cnbss.1$statistic[k] <- X
+  table_cnbss.1$p_value[k] <- 1-pchisq(X, df=2*n.y)
 }
 
-colnames(table_cnbss.1)<-c('$\\Delta_0$', '$\\psi$', '$\\psi$ lr', '$\\psi$ up', '$\\lambda$', '$\\lambda$ lr','$\\lambda$ up', '$w$', '$w$ lr', '$w$ up', '$\\beta$', '$\\beta$ lr', '$\\beta$ up', '$\\chi^2$', 'p-val')
+colnames(table_cnbss.1) <- c('$\\Delta_0$', '$\\psi$', '$\\psi$ lr', '$\\psi$ up', '$\\lambda$', '$\\lambda$ lr', '$\\lambda$ up', '$w$', '$w$ lr', '$w$ up', '$\\beta$', '$\\beta$ lr', '$\\beta$ up', '$\\chi^2$', 'p-val')
 
-
-print(xtable(table_cnbss.1), digits=4, include.rownames = FALSE, hline.after=0,comment=FALSE, sanitize.colnames.function=function(x) {x})
-
+print(xtable(table_cnbss.1),
+      digits=4,
+      include.rownames=FALSE,
+      hline.after=0,
+      comment=FALSE,
+      sanitize.colnames.function=function(x) {x})
 ```
 
 **Table S3: CNBSS-2: Parameter estimation and goodness of fit for varying onset ages.** The mixture model is fit to the CNBSS-2 data (see Table S1) for varying ages of first possible onset of preclinical disease.
