@@ -496,37 +496,37 @@ grid.arrange(ppanel(x.vec, p.grid, p.like, 'psi'),
                                   byrow=TRUE))
 ```
 
-**FIGURE 1: Practical identifiability of mixture model.** A stop-screen trial with 50,000 subjects was simulated with annual screening at ages 50--54 years with follow-up to age 60 years. The outcomes were grouped by screening round to estimate the natural history parameters and screening sensitivity. The parameter values used to generate the synthetic data are indicated by vertical dashed lines, and the point estimates of the four parameters are close to the minima of the negative (profile) log-likelihoods. For each parameter, the intersection of the profile likelihood with the horizontal dotted line defines the 95% profile confidence interval.
+**FIGURE 2: Practical identifiability of mixture model.** A stop-screen trial with 50,000 subjects was simulated with annual screening at ages 50--54 years with follow-up to age 60 years. The outcomes were grouped by screening round to estimate the natural history parameters and screening sensitivity. The parameter values used to generate the synthetic data are indicated by vertical dashed lines, and the point estimates of the four parameters are close to the minima of the negative (profile) log-likelihoods. For each parameter, the intersection of the profile likelihood with the horizontal dotted line defines the 95% profile confidence interval.
 
 \newpage
 
-```{r table1, echo=FALSE, results='asis'}
-##################################################
-# Show example target and estimated parameters
-##################################################
-load(file.path(loadpath, 'Bias_SE_Estimator', 'Bias_SE_stats_7_19_2017.RData'))
-format_table1 <- function(dset){
-  names(dset) <- sapply(names(dset),
-                        switch,
-                        'psi'='$\\psi$',
-                        'lambda'='$\\lambda$',
-                        'w'='$w$',
-                        'beta'='$\\beta$',
-                        'psi.se'='SE($\\hat{\\psi}$)',
-                        'lambda.se'='SE($\\hat{\\lambda}$)',
-                        'w.se'='SE($\\hat{w}$)',
-                        'beta.se'='SE($\\hat{\\beta}$)',
-                        'T2E'='T2E')
-  rownames(dset) <- c('Target', 'Estimate')
-  print(xtable(dset, digits=4, align=c('l', rep('c', 9))),
-        hline.after=0,
-        comment=FALSE,
-        sanitize.colnames.function=function(x) {x})
-}
-format_table1(fff)
-```
+<!-- ```{r table1, echo=FALSE, results='asis'} -->
+<!-- ################################################## -->
+<!-- # Show example target and estimated parameters -->
+<!-- ################################################## -->
+<!-- load(file.path(loadpath, 'Bias_SE_Estimator', 'Bias_SE_stats_7_19_2017.RData')) -->
+<!-- format_table1 <- function(dset){ -->
+<!--   names(dset) <- sapply(names(dset), -->
+<!--                         switch, -->
+<!--                         'psi'='$\\psi$', -->
+<!--                         'lambda'='$\\lambda$', -->
+<!--                         'w'='$w$', -->
+<!--                         'beta'='$\\beta$', -->
+<!--                         'psi.se'='SE($\\hat{\\psi}$)', -->
+<!--                         'lambda.se'='SE($\\hat{\\lambda}$)', -->
+<!--                         'w.se'='SE($\\hat{w}$)', -->
+<!--                         'beta.se'='SE($\\hat{\\beta}$)', -->
+<!--                         'T2E'='T2E') -->
+<!--   rownames(dset) <- c('Target', 'Estimate') -->
+<!--   print(xtable(dset, digits=4, align=c('l', rep('c', 9))), -->
+<!--         hline.after=0, -->
+<!--         comment=FALSE, -->
+<!--         sanitize.colnames.function=function(x) {x}) -->
+<!-- } -->
+<!-- format_table1(fff) -->
+<!-- ``` -->
 
-**TABLE 1: Bias and standard error of maximum likelihood estimators.** Example target and estimated parameters based on 1,000 Monte Carlo simulations. T2E stands for the rate of Type II errors, where the null hypothesis $\mathcal{H}_0: \psi=0$ was not rejected.
+<!-- **TABLE 1: Bias and standard error of maximum likelihood estimators.** Example target and estimated parameters based on 1,000 Monte Carlo simulations. T2E stands for the rate of Type II errors, where the null hypothesis $\mathcal{H}_0: \psi=0$ was not rejected. -->
 
 \newpage
 
@@ -587,7 +587,7 @@ dset <- rbind(transform(result_mat_55, followup=55),
 apiplot(dset, par1='psi', par2='lambda', responses=c('IdM', 'LRM'))
 ```
 
-**FIGURE 2: Adequately Precise Identification (API) and type I/II errors.** Model performance over a range of values for the indolent fraction ($\psi$) and the progression rate of progressive cancers ($\lambda$) visualized as (top row) percentages of 100 simulations achieving joint API for all four model parameters and (bottom row) percentages of 100 simulations that reject the null hypothesis $\mathcal{H}_0: \psi=0$. Performance is visualized for 50,000 women screened annually at ages 50--54 years with follow-up to age 55 years (left column) and age 60 years (right column), assuming a constant risk of onset of preclinical cancer of $w=0.0025$ per year, and sensitivity of screening to detect preclinical cancer of $\beta=80\%$.
+**FIGURE 3: Adequately Precise Identification (API) and type I/II errors.** Model performance over a range of values for the indolent fraction ($\psi$) and the progression rate of progressive cancers ($\lambda$) visualized as (top row) percentages of 100 simulations achieving joint API for all four model parameters and (bottom row) percentages of 100 simulations that reject the null hypothesis $\mathcal{H}_0: \psi=0$. Performance is visualized for 50,000 women screened annually at ages 50--54 years with follow-up to age 55 years (left column) and age 60 years (right column), assuming a constant risk of onset of preclinical cancer of $w=0.0025$ per year, and sensitivity of screening to detect preclinical cancer of $\beta=80\%$.
 
 \newpage
 
@@ -617,7 +617,7 @@ psi.dat <- cbind(psi.dat, fu.years)
 ##################################################
 # Illustrate simulations achieving API
 ##################################################
-apanel <- function(dset){
+apanel <- function(dset, titulo){
   dset <- transform(dset, psi=factor(psi))
   gg_theme(legend.position='none')
   gg <- ggplot(data=dset)
@@ -631,14 +631,14 @@ apanel <- function(dset){
                           group=psi,
                           colour=psi),
                       size=4)
-  gg <- gg+scale_x_continuous(name='Years of follow-up after last screen',
+  gg <- gg+scale_x_continuous(name='Years of follow-up',
                               limits=c(0, 10),
                               breaks=seq(0, 14, by=2))
   gg <- gg+scale_y_continuous(name='Runs achieving API',
                               limits=c(0, 1),
                               breaks=seq(0, 1, by=0.2),
                               labels=percent_format())
-  gg <- gg+scale_colour_grey()
+  gg <- gg+scale_colour_grey() + ggtitle(titulo)
   return(gg)
 }
 
@@ -674,10 +674,10 @@ psi.dat <- cbind(psi.dat, fu.years)
 # 6 months or 4 years using multiplot
 ##################################################
 bbb <- psi.dat
-multiplot(apanel(aaa), apanel(bbb), cols=2)
+multiplot(apanel(aaa, "A: MST of 6 months"), apanel(bbb, "B: MST of 4 years"), cols=2)
 ```
 
-**FIGURE 3: API as a function of follow up.** Percentages of simulations (n=100) achieving joint API for all four model parameters in a stop-screen trial with 50,000 women screened annually at ages 50--54 years, by years of follow-up after the last screen. Mean sojourn time of (A) 6 months and (B) 4 years. Lines connect evaluations under $\psi$ set equal to (dark) 20%, (medium) 40%, and (light) 60%, assuming a constant rate of onset of preclinical cancer of $w=0.0025$ per year, and sensitivity of screening to detect preclinical cancer of $\beta=80\%$.
+**FIGURE 4: API as a function of follow up.** Percentages of simulations (n=100) achieving joint API for all four model parameters in a stop-screen trial with 50,000 women screened annually at ages 50--54 years, by years of follow-up after the last screen. Mean sojourn time of (A) 6 months and (B) 4 years. Lines connect evaluations under $\psi$ set equal to (dark) 20%, (medium) 40%, and (light) 60%, assuming a constant rate of onset of preclinical cancer of $w=0.0025$ per year, and sensitivity of screening to detect preclinical cancer of $\beta=80\%$.
 
 \newpage
 
@@ -781,7 +781,7 @@ grid.arrange(spanel(x.vec, p.psi, 'psi'),
              layout_matrix=matrix(c(1, 2), ncol=2, byrow=TRUE))
 ```
 
-**FIGURE 4: Identifiability as a function of follow up.** Profile likelihoods of $\psi$ and $\lambda$ for representative realizations of the $\psi=60\%$ scenario in Figure 3A. With 0 years follow up (black lines), $\lambda$ is practically non-identifiable. With 2 years follow up (dark grey lines), $\lambda$ is practially identifiable, but does not satisfy API. With 4 and 6 years of follow up (grey and light grey lines), $\lambda$ is clearly API. The remaining parameters $\beta$ and $w$ are API under all considered follow up scenarios (results not shown). Simulation parameters as follows: $n=50,000$ trial participants, $\lambda=2$, $w=0.0025$ and $\beta=80\%$.
+**FIGURE 5: Identifiability as a function of follow up.** Profile likelihoods of $\psi$ and $\lambda$ for representative realizations of the $\psi=60\%$ scenario in Figure 3A. With 0 years follow up (black lines), $\lambda$ is practically non-identifiable. With 2 years follow up (dark grey lines), $\lambda$ is practially identifiable, but does not satisfy API. With 4 and 6 years of follow up (grey and light grey lines), $\lambda$ is clearly API. The remaining parameters $\beta$ and $w$ are API under all considered follow up scenarios (results not shown). Simulation parameters as follows: $n=50,000$ trial participants, $\lambda=2$, $w=0.0025$ and $\beta=80\%$.
 
 \newpage
 
@@ -824,7 +824,7 @@ grid.arrange(mpanel(x.vec, mis.dat, 'w'),
              layout_matrix=matrix(c(1, 2, 3), ncol=3, byrow=TRUE))
 ```
 
-**FIGURE 5: Model misspecification.** Violin plots of maximum likelihood estimates for parameters in a progressive model (i.e., one that assumes $\psi=0$) fit to data generated using a mixture model with selected values of $\psi\ge0$ assuming 50,000 women were screened annually at ages 50--54 with follow-up to age 60 years and the screening test has 80% sensitivity. Results based on n=200 simulations per $\psi$-value.
+**FIGURE 6: Model misspecification.** Violin plots of maximum likelihood estimates for parameters in a progressive model (i.e., one that assumes $\psi=0$) fit to data generated using a mixture model with selected values of $\psi\ge0$ assuming 50,000 women were screened annually at ages 50--54 with follow-up to age 60 years and the screening test has 80% sensitivity. Dashed horizontal lines indicate true parameter values. Results based on n=200 simulations per $\psi$-value.
 
 \newpage
 
@@ -874,7 +874,7 @@ mixture <- arrangeGrob(ppanel(f.like$params, p.grid, p.like, 'psi', xmax=1),
 plot(mixture)
 ```
 
-**Figure 6: Profile likelihood for CNBSS-2: mixture model.** Relative negative log-likelihoods (NLL) based on fitting the mixture model to CNBSS-2 data (see Table S1). Vertical dashed lines correspond to maximum likelihood estimates. Intersection of relaitve NLL with horizontal dotted lines indicate the profile-based  95% confidence intervals. 
+**Figure 7: Profile likelihood for CNBSS-2: mixture model.**  Relative negative log-likelihoods (NLL) based on fitting the mixture model to CNBSS-2 data (see Table S1). Vertical dashed lines correspond to maximum likelihood estimates. Intersection of relaitve NLL with horizontal dotted lines indicate the profile-based  95% confidence intervals. 
 
 \newpage 
 
