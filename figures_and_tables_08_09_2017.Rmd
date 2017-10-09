@@ -3,7 +3,6 @@ title: "Figures and Tables"
 output:
   pdf_document: default
   html_document: default
-  word_document: default
 ---
 
 ```{r setup, echo=FALSE}
@@ -797,7 +796,7 @@ x.vec <- c(psi=0.2, lambda=1/2.5, w=0.0025, beta=0.8)
 ##################################################
 load(file.path(loadpath, 'Misspecification', 'Misspecification_beta_p8.RData'))
 mis.dat <- transform(result_mat, psi=as.numeric(as.character(psi)))
-
+mis.dat$w<-1000*mis.dat$w
 ##################################################
 # Illustrate estimates under mis-specified model
 ##################################################
@@ -818,13 +817,13 @@ mpanel <- function(x.vec, dset, parname){
   return(gg)
 }
 
-grid.arrange(mpanel(x.vec, mis.dat, 'w'),
+grid.arrange(mpanel(1000*x.vec, mis.dat, 'w'),
              mpanel(x.vec, mis.dat, 'lambda'),
              mpanel(x.vec, mis.dat, 'beta'),
              layout_matrix=matrix(c(1, 2, 3), ncol=3, byrow=TRUE))
 ```
 
-**FIGURE 6: Model misspecification.** Violin plots of maximum likelihood estimates for parameters in a progressive model (i.e., one that assumes $\psi=0$) fit to data generated using a mixture model with selected values of $\psi\ge0$ assuming 50,000 women were screened annually at ages 50--54 with follow-up to age 60 years and the screening test has 80% sensitivity. Dashed horizontal lines indicate true parameter values. Results based on n=200 simulations per $\psi$-value.
+**FIGURE 6: Model misspecification.** Violin plots of maximum likelihood estimates for parameters in a progressive model (i.e., one that assumes $\psi=0$) fit to data generated using a mixture model with selected values of $\psi\ge0$ assuming 50,000 women were screened annually at ages 50--54 with follow-up to age 60 years and the screening test has 80% sensitivity. Dashed horizontal lines indicate true parameter values. Results based on n=200 simulations per $\psi$-value. $w$ scaled by a factor of $10^3$.
 
 \newpage
 
@@ -998,7 +997,7 @@ sizeplot(dset, par1='psi', par2='lambda', response='SE')
 
 ```{r misspecification}
 ##################################################
-# Simulation study parameters
+# Simulation stßudy parameters
 ##################################################
 x.vec <- c(psi=0.2, lambda=1/2.5, w=0.0025, beta=0.4)
 
@@ -1012,13 +1011,15 @@ mis.dat <- transform(result_mat, psi=as.numeric(as.character(psi)))
 ##################################################
 # Illustrate estimates under mis-specified model
 ##################################################
-grid.arrange(mpanel(x.vec, mis.dat, 'w'),
+
+mis.dat$w<-1000*mis.dat$w
+grid.arrange(mpanel(1000*x.vec, mis.dat, 'w'),
              mpanel(x.vec, mis.dat, 'lambda'),
              mpanel(x.vec, mis.dat, 'beta'),
              layout_matrix=matrix(c(1, 2, 3), ncol=3, byrow=TRUE))
 ```
 
-**FIGURE S3: Model misspecification.** Violin plots of maximum likelihood estimates for parameters in a progressive model (i.e., one that assumes $\psi=0$) fit to data generated using a mixture model with selected values of $\psi\ge0$ assuming 50,000 women were screened annually at ages 50--54 with follow-up to age 60 years and the screening test has 40% sensitivity. Results based on n=200 simulations per $\psi$-value.
+**FIGURE S3: Model misspecification.** Violin plots of maximum likelihood estimates for parameters in a progressive model (i.e., one that assumes $\psi=0$) fit to data generated using a mixture model with selected values of $\psi\ge0$ assuming 50,000 women were screened annually at ages 50--54 with follow-up to age 60 years and the screening test has 40% sensitivity. Results based on n=200 simulations per $\psi$-value. Axes for $w$ scaled by a factor of $10^3$.
 
 \newpage 
 
@@ -1219,6 +1220,11 @@ for(k in 1:dim(table_cnbss.1)[1]){
 # Output
 ##################################################
 colnames(table_cnbss.1) <- c('$\\psi$',  '$\\lambda$', '$\\lambda$ lr', '$\\lambda$ up', '$w$', '$w$ lr', '$w$ up', '$\\beta$', '$\\beta$ lr', '$\\beta$ up', '$\\chi^2$', 'p-val')
+
+table_cnbss.1$`$w$`<-1000*table_cnbss.1$`$w$`
+table_cnbss.1$`$w$ lr`<-1000*table_cnbss.1$`$w$ lr`
+table_cnbss.1$`$w$ up`<-1000*table_cnbss.1$`$w$ up`
+
 print(xtable(table_cnbss.1),
       digits=4,
       include.rownames=FALSE,
@@ -1227,7 +1233,8 @@ print(xtable(table_cnbss.1),
       sanitize.colnames.function=function(x) {x})
 ```
 
-**Table S2: CNBSS-2: parameter estimation and goodness of fit for constrained mixture model.** The mixture model with fixed fraction of indolent cancers $\psi$ is fit to the CNBSS-2 data (see Table S1). Onset of preclinical disease is assumed to be negligible before age $\Delta_0=45$ years.
+**Table S2: CNBSS-2: parameter estimation and goodness of fit for constrained mixture model.** The mixture model with fixed fraction of indolent cancers $\psi$ is fit to the CNBSS-2 data (see Table S1). Onset of preclinical disease is assumed to be negligible before age $\Delta_0=45$ years. $lr$ and $up$ denote the lower and upper bounds of the 95% profile confidence intervals. Values for $w$ are reported per 1,000 women. $\chi^2$ is the value of the statistic, and $P-val$ the corresponding goodness of fit P-value.
+
 
 \newpage 
 
@@ -1331,7 +1338,11 @@ for(k in 1:dim(table_cnbss.1)[1]){
   table_cnbss.1$p_value[k] <- 1-pchisq(X, df=2*n.y)
 }
 
-colnames(table_cnbss.1) <- c('$\\Delta_0$', '$\\psi$', '$\\psi$ lr', '$\\psi$ up', '$\\lambda$', '$\\lambda$ lr', '$\\lambda$ up', '$w$', '$w$ lr', '$w$ up', '$\\beta$', '$\\beta$ lr', '$\\beta$ up', '$\\chi^2$', 'p-val')
+colnames(table_cnbss.1) <- c('$\\Delta_0$', '$\\psi$', '$\\psi$ lr', '$\\psi$ up', '$\\lambda$', '$\\lambda$ lr', '$\\lambda$ up', '$w$', '$w$ lr', '$w$ up', '$\\beta$', '$\\beta$ lr', '$\\beta$ up', '$\\chi^2$', 'P-val')
+
+table_cnbss.1$`$w$`<-table_cnbss.1$`$w$`*1000
+table_cnbss.1$`$w$ lr`<-1000*table_cnbss.1$`$w$ lr`
+table_cnbss.1$`$w$ up`<-1000*table_cnbss.1$`$w$ up`
 
 print(xtable(table_cnbss.1),
       digits=4,
@@ -1341,4 +1352,4 @@ print(xtable(table_cnbss.1),
       sanitize.colnames.function=function(x) {x})
 ```
 
-**Table S3: CNBSS-2: Parameter estimation and goodness of fit for varying onset ages.** The mixture model is fit to the CNBSS-2 data (see Table S1) for varying ages of first possible onset of preclinical disease.
+**Table S3: CNBSS-2: Parameter estimation and goodness of fit for varying onset ages.** The mixture model is fit to the CNBSS-2 data (see Table S1) for varying ages of first possible onset of preclinical disease. $lr$ and $up$ denote the lower and upper bounds of the 95% profile confidence intervals. Values for $w$ are reported per 1,000 women. $\chi^2$ is the value of the statistic, and $P-val$ the corresponding goodness of fit P-value.
