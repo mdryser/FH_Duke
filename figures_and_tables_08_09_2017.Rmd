@@ -338,7 +338,7 @@ plikelihood <- function(x0,
                      clin.FU=last.screen)
       problem <- problem+popt$convergence
       if(problem)
-        warning('Convegence problem for ', fixed, '=', p.grid[j, fixed])
+        warning('Convergence problem for ', fixed, '=', p.grid[j, fixed])
       LL[j, fixed] <- popt$objective-fopt$objective
     }
   }
@@ -461,7 +461,6 @@ ppanel <- function(x.vec, p.grid, p.like, parname, xmax=NA){
   dset <- pframe(p.grid, p.like, parname)
   gg_theme()
   gg <- ggplot(data=dset)
-  gg <- gg+geom_line(aes(x=param, y=NLL), size=1)
   gg <- gg+geom_hline(yintercept=CI.line,
                       linetype='dotted',
                       colour='gray30',
@@ -470,6 +469,7 @@ ppanel <- function(x.vec, p.grid, p.like, parname, xmax=NA){
                       linetype='dashed',
                       colour='gray30',
                       size=0.75)
+  gg <- gg+geom_line(aes(x=param, y=NLL), size=1)
   if(is.na(xmax)){
     xmax <- ifelse(parname == 'w', 0.01, 1)
     xstep <- ifelse(parname == 'w', 0.002, 0.2)
@@ -553,6 +553,7 @@ apiplot <- function(dset, par1, par2, responses){
   gg <- gg+geom_raster(aes(fill=proportion), interpolate=FALSE)
   gg <- gg+facet_grid(response~followup, labeller=label_parsed)
   gg <- gg+scale_x_continuous(name=parse(text=par1),
+                              breaks=seq(0, 0.75, by=0.25),
                               labels=percent_format(),
                               expand=c(0, 0))
   gg <- gg+scale_y_log10(name=parse(text=par2),
@@ -586,7 +587,7 @@ dset <- rbind(transform(result_mat_55, followup=55),
 apiplot(dset, par1='psi', par2='lambda', responses=c('IdM', 'LRM'))
 ```
 
-**FIGURE 3: Adequately Precise Identification (API) and type I/II errors.** Model performance over a range of values for the indolent fraction ($\psi$) and the progression rate of progressive cancers ($\lambda$) visualized as (top row) percentages of 100 simulations achieving joint API for all four model parameters and (bottom row) percentages of 100 simulations that reject the null hypothesis $\mathcal{H}_0: \psi=0$. Performance is visualized for 50,000 women screened annually at ages 50--54 years with follow-up to age 55 years (left column) and age 60 years (right column), assuming a constant risk of onset of preclinical cancer of $w=0.0025$ per year, and sensitivity of screening to detect preclinical cancer of $\beta=80\%$.
+**FIGURE 3: Adequately Precise Identification (API) and type I/II errors.** Model performance over a range of values for the indolent fraction ($\psi$) and the progression rate of progressive cancers ($\lambda$) visualized as (top row) percentages of 100 simulations achieving joint API for all four model parameters and (bottom row) percentages of 100 simulations that reject the null hypothesis $\mathcal{H}_0: \psi=0$. Performance is visualized for 50,000 women screened annually at ages 50--54 years with follow-up to age 55 years (left column) and age 60 years (right column), assuming a constant risk of onset of preclinical cancer of $w=0.0025$ per year and sensitivity of screening to detect preclinical cancer of $\beta=80\%$.
 
 \newpage
 
@@ -673,10 +674,10 @@ psi.dat <- cbind(psi.dat, fu.years)
 # 6 months or 4 years using multiplot
 ##################################################
 bbb <- psi.dat
-multiplot(apanel(aaa, "A: MST of 6 months"), apanel(bbb, "B: MST of 4 years"), cols=2)
+multiplot(apanel(aaa, "MST of 6 months"), apanel(bbb, "MST of 4 years"), cols=2)
 ```
 
-**FIGURE 4: API as a function of follow up.** Percentages of simulations (n=100) achieving joint API for all four model parameters in a stop-screen trial with 50,000 women screened annually at ages 50--54 years, by years of follow-up after the last screen. Mean sojourn time of (A) 6 months and (B) 4 years. Lines connect evaluations under $\psi$ set equal to (dark) 20%, (medium) 40%, and (light) 60%, assuming a constant rate of onset of preclinical cancer of $w=0.0025$ per year, and sensitivity of screening to detect preclinical cancer of $\beta=80\%$.
+**FIGURE 4: API as a function of follow up.** Percentages of 100 simulations achieving joint API for all four model parameters in a stop-screen trial with 50,000 women screened annually at ages 50--54 years, by years of follow-up after the last screen. Mean sojourn time is (left panel) 6 months and (right panel) 4 years. Lines connect evaluations under $\psi$ set equal to (dark) 20%, (medium) 40%, and (light) 60%, assuming a constant rate of onset of preclinical cancer of $w=0.0025$ per year and sensitivity of screening to detect preclinical cancer of $\beta=80\%$.
 
 \newpage
 
@@ -780,7 +781,7 @@ grid.arrange(spanel(x.vec, p.psi, 'psi'),
              layout_matrix=matrix(c(1, 2), ncol=2, byrow=TRUE))
 ```
 
-**FIGURE 5: Identifiability as a function of follow up.** Profile likelihoods of $\psi$ and $\lambda$ for representative realizations of the $\psi=60\%$ scenario in Figure 3A. With 0 years follow up (black lines), $\lambda$ is practically non-identifiable. With 2 years follow up (dark grey lines), $\lambda$ is practially identifiable, but does not satisfy API. With 4 and 6 years of follow up (grey and light grey lines), $\lambda$ is clearly API. The remaining parameters $\beta$ and $w$ are API under all considered follow up scenarios (results not shown). Simulation parameters as follows: $n=50,000$ trial participants, $\lambda=2$, $w=0.0025$ and $\beta=80\%$.
+**FIGURE 5: Identifiability as a function of follow up.** Profile likelihoods of $\psi$ and $\lambda$ for representative realizations of the $\psi=60\%$ scenario in Figure 4 (left panel). With 0 years follow up (black lines), $\lambda$ is practically non-identifiable. With 2 years follow up (dark grey lines), $\lambda$ is practially identifiable, but does not satisfy API. With 4 and 6 years of follow up (grey and light grey lines), $\lambda$ is clearly API. The remaining parameters $\beta$ and $w$ are API under all considered follow-up scenarios (results not shown). Simulation parameters as follows: 50,000 trial participants, $\lambda=2$, $w=0.0025$, and $\beta=80\%$.
 
 \newpage
 
@@ -796,7 +797,7 @@ x.vec <- c(psi=0.2, lambda=1/2.5, w=0.0025, beta=0.8)
 ##################################################
 load(file.path(loadpath, 'Misspecification', 'Misspecification_beta_p8.RData'))
 mis.dat <- transform(result_mat, psi=as.numeric(as.character(psi)))
-mis.dat$w<-1000*mis.dat$w
+
 ##################################################
 # Illustrate estimates under mis-specified model
 ##################################################
@@ -817,13 +818,13 @@ mpanel <- function(x.vec, dset, parname){
   return(gg)
 }
 
-grid.arrange(mpanel(1000*x.vec, mis.dat, 'w'),
+grid.arrange(mpanel(x.vec, mis.dat, 'w'),
              mpanel(x.vec, mis.dat, 'lambda'),
              mpanel(x.vec, mis.dat, 'beta'),
              layout_matrix=matrix(c(1, 2, 3), ncol=3, byrow=TRUE))
 ```
 
-**FIGURE 6: Model misspecification.** Violin plots of maximum likelihood estimates for parameters in a progressive model (i.e., one that assumes $\psi=0$) fit to data generated using a mixture model with selected values of $\psi\ge0$ assuming 50,000 women were screened annually at ages 50--54 with follow-up to age 60 years and the screening test has 80% sensitivity. Dashed horizontal lines indicate true parameter values. Results based on n=200 simulations per $\psi$-value. $w$ scaled by a factor of $10^3$.
+**FIGURE 6: Model misspecification.** Violin plots of maximum likelihood estimates for parameters in a progressive model (i.e., one that assumes $\psi=0$) fit to data generated using a mixture model with selected values of $\psi\ge0$ assuming 50,000 women were screened annually at ages 50--54 with follow-up to age 60 years and the screening test has 80% sensitivity. Dashed horizontal lines indicate true parameter values. Results based on $n=200$ simulations per $\psi$-value.
 
 \newpage
 
@@ -845,7 +846,7 @@ clin.FU <- FU.50
 ##################################################
 # Initial values and limits for optimization algorithm
 ##################################################
-x0 <- c(psi=0.2, lambda=.05, w=1/1000, beta=.6)
+x0 <- c(psi=0.2, lambda=0.05, w=1/1000, beta=0.6)
 xl <- c(psi=0, lambda=0, w=0, beta=0)
 xu <- c(psi=1, lambda=10, w=5, beta=1)
 
@@ -873,7 +874,7 @@ mixture <- arrangeGrob(ppanel(f.like$params, p.grid, p.like, 'psi', xmax=1),
 plot(mixture)
 ```
 
-**Figure 7: Profile likelihood for CNBSS-2: mixture model.**  Relative negative log-likelihoods (NLL) based on fitting the mixture model to CNBSS-2 data (see Table S1). Vertical dashed lines correspond to maximum likelihood estimates. Intersection of relaitve NLL with horizontal dotted lines indicate the profile-based  95% confidence intervals. 
+**Figure 7: Profile likelihood for CNBSS-2: mixture model.**  Relative negative log-likelihoods (NLL) based on fitting the mixture model to CNBSS-2 data (see Table S1). Vertical dashed lines correspond to maximum likelihood estimates. Intersection of relative NLL with horizontal dotted lines indicate the profile-based 95% confidence intervals. 
 
 \newpage 
 
@@ -883,16 +884,16 @@ plot(mixture)
 # Like Table 1 in Shen et al. (2017) but including 5th screening round
 source('trials_FU.R')
 cnbprint <- data.frame(Round=c(1, 2, 3, 4, 5))
-cnbprint <- cbind(cnbprint, cnbss50)
-colnames(cnbprint) <- c('Round', 'Screen', 'Interval', 'n')
-print(xtable(cnbprint, digits=0),
+cnbprint <- cbind(cnbprint, cnbss50[, c(3, 1, 2)])
+colnames(cnbprint) <- c('Screening round', 'No. of women', 'Screen-detected cases', 'Interval-detected cases')
+print(xtable(cnbprint, align=rep('c', 5), digits=0),
       include.rownames=FALSE,
       hline.after=0,
       comment=FALSE,
       sanitize.colnames.function=function(x) {x})
 ```
 
-**Table S1: CNBSS-2 data.** Grouped data from the Canadian Breast Cancer Screening Study-2 [Miller et al., CMAJ, 1992]. Round: screening round; Screen: number of screen-detected cases; Interval: number of interval cases; n: number of women who attended all screening rounds up to and including the current round.
+**Table S1: CNBSS-2 data.** Grouped data from the Canadian Breast Cancer Screening Study-2 [Miller et al., CMAJ, 1992]. ``No. of women'' is the number of women who attended all screening rounds up to and including the current round.
 
 \newpage
 
@@ -901,7 +902,7 @@ print(xtable(cnbprint, digits=0),
 # Illustrate heatmaps of sensitivity of bias or SE
 # to sample size
 ##################################################
-sizeplot <- function(dset, par1, par2, response){
+sizeplot <- function(dset, par1, par2, response, zlimits){
   melted <- melt(dset, id.vars=c(par1, par2, 'followup'))
   melted <- transform(melted,
                       measure=sub('^([^_]*)_([^_]*)$', '\\1', variable),
@@ -909,11 +910,14 @@ sizeplot <- function(dset, par1, par2, response){
   melted <- transform(melted,
                       variable=factor(variable,
                                       levels=c('psi', 'lambda', 'w', 'beta')),
-                      value=log10(abs(value)))
+                      followup=paste('Follow-up~to~age', followup, sep='~'),
+                      value=abs(value))
   melted <- subset(melted, measure == response, select=-measure)
   gg_theme(axis.title=element_text(size=18),
            axis.title.y=element_text(size=18, angle=0, vjust=0.5),
+           panel.spacing=unit(0.01, 'npc'),
            aspect.ratio=1,
+           strip.text.x=element_text(angle=0, size=12),
            strip.text.y=element_text(angle=0, size=14))
   gg <- ggplot(data=melted, aes_string(x=par1, y=par2))
   gg <- gg+geom_raster(aes(fill=value), interpolate=FALSE)
@@ -928,7 +932,7 @@ sizeplot <- function(dset, par1, par2, response){
   gg <- gg+scale_fill_gradient(name='',
                                low='white',
                                high='black',
-                               trans='exp',
+                               limits=zlimits,
                                guide=guide_colorbar(draw.ulim=FALSE,
                                                     draw.llim=FALSE,
                                                     label.hjust=1))
@@ -948,50 +952,25 @@ dset <- rbind(transform(result_mat_55, followup=55),
               transform(result_mat_60, followup=60))
 ```
 
-```{r sample-size-bias, echo=FALSE}
+```{r sample-size-bias, fig.width=8, echo=FALSE}
 ##################################################
 # Illustrate sensitivity of bias to follow-up
 ##################################################
-sizeplot(dset, par1='psi', par2='lambda', response='bias')
+sizeplot(dset, par1='psi', par2='lambda', response='bias', zlimits=c(0, 1))
 ```
 
-**FIGURE S1: Sensitivity of bias to follow up.** Absolute bias for all four model parameters assuming 50,000 women were screened annually at ages 50--54 years with follow-up to age 55 and 60 years, respectively. Screening test sensitivity was   set to $\beta=80\%$.
+**FIGURE S1: Sensitivity of bias to follow up.** Absolute bias for all four model parameters assuming 50,000 women were screened annually at ages 50--54 years with follow-up to age 55 years (left column) and age 60 years (right column). Screening test sensitivity was set to $\beta=80\%$.
 
 \newpage
 
-```{r sample-size-se, echo=FALSE}
+```{r sample-size-se, fig.width=8, echo=FALSE}
 ##################################################
 # Illustrate sensitivity of SEs to follow-up
 ##################################################
-sizeplot(dset, par1='psi', par2='lambda', response='SE')
+sizeplot(dset, par1='psi', par2='lambda', response='SE', zlimits=c(0, 2))
 ```
 
-**FIGURE S2: Sensitivity of the standard error to follow up.** Standard errors for all four model parameters assuming 50,000 women were screened annually at ages 50--54 years with follow-up to age 55 and age 60 yearsk respectively. Screening test sensitivity was   set to $\beta=80\%$.
-
-<!-- \newpage -->
-
-<!-- ```{r cnbss-progressive} -->
-<!-- ################################################## -->
-<!-- # Illustrate progressive model profile likelihoods -->
-<!-- ################################################## -->
-<!-- #grid.draw(progressive) # Roman - I can't find this function -->
-<!-- plot(progressive) -->
-<!-- ``` -->
-
-<!-- **Figure S3: Fitting progressive model to combined data from CNBSS-I and CNBSS-II.** Profile likelihoods for the three model parameters are shown assuming 50,000 women were screened annually at ages 50--54 with follow-up to age 55 years (Table S1). -->
-
-<!-- \newpage -->
-
-<!-- ```{r cnbss-mixture} -->
-<!-- ################################################## -->
-<!-- # Illustrate progressive model profile likelihoods -->
-<!-- ################################################## -->
-<!-- #grid.draw(mixture) -->
-<!-- plot(mixture) -->
-
-<!-- ``` -->
-
-<!-- **Figure S4: Fitting mixture model to combined data from CNBSS-I and CNBSS-II.** Profile likelihoods for the four mixture model parameters are shown assuming 50,000 women were screened annually at ages 50--54 with follow-up to age 55 years (Table S1). -->
+**FIGURE S2: Sensitivity of the standard error to follow up.** Standard errors for all four model parameters assuming 50,000 women were screened annually at ages 50--54 years with follow-up to age 55 years (left column) and age 60 years (right column). Screening test sensitivity was set to $\beta=80\%$.
 
 \newpage
 
@@ -1011,17 +990,15 @@ mis.dat <- transform(result_mat, psi=as.numeric(as.character(psi)))
 ##################################################
 # Illustrate estimates under mis-specified model
 ##################################################
-
-mis.dat$w<-1000*mis.dat$w
-grid.arrange(mpanel(1000*x.vec, mis.dat, 'w'),
+grid.arrange(mpanel(x.vec, mis.dat, 'w'),
              mpanel(x.vec, mis.dat, 'lambda'),
              mpanel(x.vec, mis.dat, 'beta'),
              layout_matrix=matrix(c(1, 2, 3), ncol=3, byrow=TRUE))
 ```
 
-**FIGURE S3: Model misspecification.** Violin plots of maximum likelihood estimates for parameters in a progressive model (i.e., one that assumes $\psi=0$) fit to data generated using a mixture model with selected values of $\psi\ge0$ assuming 50,000 women were screened annually at ages 50--54 with follow-up to age 60 years and the screening test has 40% sensitivity. Results based on n=200 simulations per $\psi$-value. Axes for $w$ scaled by a factor of $10^3$.
+**FIGURE S3: Model misspecification.** Violin plots of maximum likelihood estimates for parameters in a progressive model (i.e., one that assumes $\psi=0$) fit to data generated using a mixture model with selected values of $\psi\ge0$ assuming 50,000 women were screened annually at ages 50--54 with follow-up to age 60 years and the screening test has 40% sensitivity. Results based on $n=200$ simulations per $\psi$-value.
 
-\newpage 
+\newpage
 
 ```{r}
 #######################################################
@@ -1075,7 +1052,7 @@ plikelihood_fix <- function(x0,
                      clin.FU=last.screen)
       problem <- problem+popt$convergence
       if(problem)
-        warning('Convegence problem for ', fixed, '=', p.grid[j, fixed])
+        warning('Convergence problem for ', fixed, '=', p.grid[j, fixed])
       LL[j, fixed] <- popt$objective-fopt$objective
     }
   }
@@ -1116,8 +1093,34 @@ ptable <- function(f.like, p.grid, p.like){
 }
 ```
 
+```{r cnbss-progressive}
+##################################################
+# Illustrate progressive model profile likelihoods
+##################################################
+grid.draw(progressive)
+#plot(progressive)
+```
+
+**Figure S3: Fitting progressive model to CNBSS-II data.** Profile likelihoods for the three model parameters are shown assuming 50,000 women were screened annually at ages 50--54 with follow-up to age 55 years (Table S1).
+
+\newpage
+
+```{r cnbss-mixture}
+##################################################
+# Illustrate progressive model profile likelihoods
+##################################################
+grid.draw(mixture)
+#plot(mixture)
+```
+
+**Figure S4: Fitting mixture model to CNBSS-II data.** Profile likelihoods for the four mixture model parameters are shown assuming 50,000 women were screened annually at ages 50--54 with follow-up to age 55 years (Table S1).
+
+\newpage
+
 ```{r cnbss2-table1, results='asis', echo=FALSE, comment=FALSE}
-# Here, we fix psi at different values and find the MLE and GoF
+##################################################
+# Fix psi at different values and find the MLE and GoF
+##################################################
 psi_fix <- c(0, 0.05, 0.1, 0.2, 0.4)
 l.p <- length(psi_fix)
 table_cnbss.1 <- data.frame(psi=psi_fix,
@@ -1140,12 +1143,12 @@ cnbss50 <- matrix(c(142, 15, 19711,
                   byrow=TRUE,
                   ncol=3)
 t.vec <- c(45, 55, 56, 57, 58, 59, 60)
-n.y <- dim(cnbss50)[1]
+n.y <- nrow(cnbss50)
 
 ##################################################
 # MLE
 ##################################################
-for(k in 1:dim(table_cnbss.1)[1]){
+for(k in 1:nrow(table_cnbss.1)){
   #########
   # MLE
   #########
@@ -1186,7 +1189,7 @@ for(k in 1:dim(table_cnbss.1)[1]){
   table_cnbss.1$beta.CI.up[k] <- ptab[3, 2]
  
   #########
-  ## GoF
+  # GoF
   #########
 
   sc_ex <- rep(0, n.y)  
@@ -1219,30 +1222,41 @@ for(k in 1:dim(table_cnbss.1)[1]){
 ##################################################
 # Output
 ##################################################
-colnames(table_cnbss.1) <- c('$\\psi$',  '$\\lambda$', '$\\lambda$ lr', '$\\lambda$ up', '$w$', '$w$ lr', '$w$ up', '$\\beta$', '$\\beta$ lr', '$\\beta$ up', '$\\chi^2$', 'p-val')
-
-table_cnbss.1$`$w$`<-1000*table_cnbss.1$`$w$`
-table_cnbss.1$`$w$ lr`<-1000*table_cnbss.1$`$w$ lr`
-table_cnbss.1$`$w$ up`<-1000*table_cnbss.1$`$w$ up`
-
-print(xtable(table_cnbss.1),
-      digits=4,
+table.s2 <- with(table_cnbss.1, data.frame('$\\psi$'=sprintf('%4.2f', psi),
+                                           '$\\hat{\\lambda}$'=sprintf('%4.2f', lambda),
+                                           '95\\% CI'=paste(sprintf('%4.2f', lambda.CI.lr),
+                                                            sprintf('%4.2f', lambda.CI.up),
+                                                            sep='-'),
+                                           '$\\hat{w}$'=sprintf('%6.4f', w),
+                                           '95\\% CI'=paste(sprintf('%6.4f', w.CI.lr),
+                                                            sprintf('%6.4f', w.CI.up),
+                                                            sep='-'),
+                                           '$\\hat{\\beta}$'=sprintf('%4.2f', beta),
+                                           '95\\% CI'=paste(sprintf('%4.2f', beta.CI.lr),
+                                                            sprintf('%4.2f', beta.CI.up),
+                                                            sep='-'),
+                                           '$\\chi^2$'=sprintf('%4.2f', statistic),
+                                           'P-value'=sprintf('%6.4f', p_value),
+                                           row.names=NULL,
+                                           check.names=FALSE))
+print(xtable(table.s2, align=rep('c', 10)),
       include.rownames=FALSE,
       hline.after=0,
       comment=FALSE,
       sanitize.colnames.function=function(x) {x})
 ```
 
-**Table S2: CNBSS-2: parameter estimation and goodness of fit for constrained mixture model.** The mixture model with fixed fraction of indolent cancers $\psi$ is fit to the CNBSS-2 data (see Table S1). Onset of preclinical disease is assumed to be negligible before age $\Delta_0=45$ years. $lr$ and $up$ denote the lower and upper bounds of the 95% profile confidence intervals. Values for $w$ are reported per 1,000 women. $\chi^2$ is the value of the statistic, and $P-val$ the corresponding goodness of fit P-value.
-
+**Table S2: CNBSS-2: parameter estimation and goodness of fit for constrained mixture model.** The mixture model with fixed fraction of indolent cancers $\psi$ is fit to the CNBSS-2 data (see Table S1). Onset of preclinical disease is assumed to be negligible before age $\Delta_0=45$ years.
 
 \newpage 
 
 ```{r cnbss2-table2, results='asis', echo=FALSE}
-# Here, vary the length of the time interval of positive onset away from 45 years
+##################################################
+# Vary the length of the time interval of positive onset away from 45 years
+##################################################
 t_fix <- c(20, 15, 10, 5)
 l.p <- length(t_fix)
-n.y <- dim(cnbss50)[1]
+n.y <- nrow(cnbss50)
 
 table_cnbss.1 <- data.frame(age_onset=numeric(l.p),
                             psi=numeric(l.p),
@@ -1267,7 +1281,7 @@ cnbss50 <- matrix(c(142, 15, 19711,
                   byrow=TRUE,
                   ncol=3)
 
-for(k in 1:dim(table_cnbss.1)[1]){
+for(k in 1:nrow(table_cnbss.1)){
   t.vec <- c(55-t_fix[k], 55, 56, 57, 58, 59, 60)
   table_cnbss.1$age_onset[k] <- t.vec[1]
   
@@ -1338,18 +1352,33 @@ for(k in 1:dim(table_cnbss.1)[1]){
   table_cnbss.1$p_value[k] <- 1-pchisq(X, df=2*n.y)
 }
 
-colnames(table_cnbss.1) <- c('$\\Delta_0$', '$\\psi$', '$\\psi$ lr', '$\\psi$ up', '$\\lambda$', '$\\lambda$ lr', '$\\lambda$ up', '$w$', '$w$ lr', '$w$ up', '$\\beta$', '$\\beta$ lr', '$\\beta$ up', '$\\chi^2$', 'P-val')
-
-table_cnbss.1$`$w$`<-table_cnbss.1$`$w$`*1000
-table_cnbss.1$`$w$ lr`<-1000*table_cnbss.1$`$w$ lr`
-table_cnbss.1$`$w$ up`<-1000*table_cnbss.1$`$w$ up`
-
-print(xtable(table_cnbss.1),
-      digits=4,
+table.s3 <- with(table_cnbss.1, data.frame('$\\Delta_0$'=sprintf('%d', age_onset),
+                                           '$\\hat{\\psi}$'=sprintf('%4.2f', psi),
+                                           '95\\% CI'=paste(sprintf('%4.2f', psi.CI.lr),
+                                                            sprintf('%4.2f', psi.CI.up),
+                                                            sep='-'),
+                                           '$\\hat{\\lambda}$'=sprintf('%4.2f', lambda),
+                                           '95\\% CI'=paste(sprintf('%4.2f', lambda.CI.lr),
+                                                            sprintf('%4.2f', lambda.CI.up),
+                                                            sep='-'),
+                                           '$\\hat{w}$'=sprintf('%6.4f', w),
+                                           '95\\% CI'=paste(sprintf('%6.4f', w.CI.lr),
+                                                            sprintf('%6.4f', w.CI.up),
+                                                            sep='-'),
+                                           '$\\hat{\\beta}$'=sprintf('%4.2f', beta),
+                                           '95\\% CI'=paste(sprintf('%4.2f', beta.CI.lr),
+                                                            sprintf('%4.2f', beta.CI.up),
+                                                            sep='-'),
+                                           '$\\chi^2$'=sprintf('%4.2f', statistic),
+                                           'P-value'=sprintf('%6.4f', p_value),
+                                           row.names=NULL,
+                                           check.names=FALSE))
+print(xtable(table.s3, align=rep('c', 12)),
       include.rownames=FALSE,
       hline.after=0,
       comment=FALSE,
       sanitize.colnames.function=function(x) {x})
 ```
 
-**Table S3: CNBSS-2: Parameter estimation and goodness of fit for varying onset ages.** The mixture model is fit to the CNBSS-2 data (see Table S1) for varying ages of first possible onset of preclinical disease. $lr$ and $up$ denote the lower and upper bounds of the 95% profile confidence intervals. Values for $w$ are reported per 1,000 women. $\chi^2$ is the value of the statistic, and $P-val$ the corresponding goodness of fit P-value.
+**Table S3: CNBSS-2: parameter estimation and goodness of fit for varying onset ages.** The mixture model is fit to the CNBSS-2 data (see Table S1) for varying ages of first possible onset of preclinical disease.
+
