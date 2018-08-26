@@ -42,6 +42,11 @@ opts_chunk$set(echo=FALSE,
 loadpath <- '.'
 
 ##################################################
+# Save figures as requested by AJE technical review 
+##################################################
+aje_formatted <- TRUE
+
+##################################################
 # Confidence level for profile likelihood CIs
 ##################################################
 alpha.level <- 0.05
@@ -352,14 +357,16 @@ gg_theme <- function(...){
   theme_set(theme_bw())
   theme_update(panel.grid.major=element_blank(),
                panel.grid.minor=element_blank(),
+               panel.border=element_blank(),
                panel.spacing=unit(0.03, 'npc'),
-               axis.text=element_text(colour='black', size=10),
+               axis.text=element_text(colour='black', size=12),
                axis.title=element_text(size=12),
                axis.title.y=element_text(size=12, angle=90, vjust=0.5),
-               axis.line=element_line(colour='black'),
-               aspect.ratio=1,
+               axis.line=element_line(size=1, colour='black'),
+               axis.ticks=element_line(size=1, colour='black'),
                strip.background=element_rect(fill=NA, colour=NA),
-               strip.text.x=element_text(angle=0, size=14))
+               strip.text.x=element_text(angle=0, size=12),
+               plot.margin=unit(c(2, 1, 1, 2), 'lines'))
   theme_update(...)
 }
 
@@ -420,7 +427,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 }
 ```
 
-```{r figure1}
+```{r figure2}
 ##################################################
 # Simulation study parameters
 # psi:    fraction of indolent cancers
@@ -455,10 +462,89 @@ p.grid <- pgrid(x.vec)
 p.like <- plikelihood(x0, xl, xu, t.vec, trial.data, last.screen, p.grid)
 
 ##################################################
+# Save PDF of entire figure and EPS of each panel
+# as requested by AJE technical review (turn off
+# clipping to show letter designations on panels)
+##################################################
+addlegend <- function(gg){
+  gt <- ggplot_gtable(ggplot_build(gg))
+  key <- which(sapply(gt$grobs, function(x) x$name) == "guide-box")
+  return(gt$grobs[[key]])
+}
+
+ajeformat <- function(panel_list,
+                      number,
+                      prefix=paste('AJE-01121-2017_Ryser', number, sep='_'),
+                      index=0,
+                      nrows=2,
+                      ncols=2,
+                      width=ncols*3,
+                      height=nrows*3,
+                      panel_ext='eps',
+                      entire_ext='pdf',
+                      panel_key=NULL){
+    for(panel in panel_list){
+      index <- index+1
+      filename <- paste0(prefix, LETTERS[index])
+      gt <- ggplot_gtable(ggplot_build(panel))
+      gt$layout$clip[gt$layout$name == "panel"] <- "off"
+      panel_list[[index]] <- gt
+      ggsave(plot=gt,
+             file=paste(filename, panel_ext, sep='.'),
+             width=6,
+             height=6)
+    }
+    entire <- arrangeGrob(grobs=panel_list,
+                          nrow=nrows,
+                          ncol=ncols)
+    if(!is.null(panel_key)){
+      key <- addlegend(panel_key)
+      filename <- paste(prefix, 'key', sep='_')
+      ggsave(plot=key,
+             file=paste(filename, panel_ext, sep='.'),
+             width=2,
+             height=4)
+      lwidth <- sum(key$width)
+      entire <- arrangeGrob(entire,
+                            key,
+                            ncol=2,
+                            widths=unit.c(unit(1, "npc")-lwidth,
+                                          lwidth))
+    }
+    ggsave(plot=entire,
+           file=paste(prefix, entire_ext, sep='.'),
+           width=width,
+           height=height)
+}
+
+##################################################
 # Illustrate profile likelihoods
 ##################################################
-ppanel <- function(x.vec, p.grid, p.like, parname, xmax=NA){
+ppanel <- function(x.vec,
+                   p.grid,
+                   p.like,
+                   parname,
+                   xmax=NA,
+                   ymax=10,
+                   xpad=1.05,
+                   letter=NA){
   dset <- pframe(p.grid, p.like, parname)
+  if(with(dset, which.min(NLL) > 1))
+    lset <- with(subset(dset, param < param[which.min(NLL)]),
+                 data.frame(param=approx(NLL, param, xout=ymax)$y,
+                            NLL=ymax,
+                            simulation=NA))
+  else
+    lset <- NULL
+  if(with(dset, which.min(NLL) < length(param)))
+    uset <- with(subset(dset, param > param[which.min(NLL)]),
+                 data.frame(param=approx(NLL, param, xout=ymax)$y,
+                            NLL=ymax,
+                            simulation=NA))
+  else
+    uset <- NULL
+  dset <- rbind(dset, lset, uset)
+  dset <- subset(dset, NLL <= ymax)
   gg_theme()
   gg <- ggplot(data=dset)
   gg <- gg+geom_hline(yintercept=CI.line,
@@ -476,14 +562,38 @@ ppanel <- function(x.vec, p.grid, p.like, parname, xmax=NA){
   } else {
     xstep <- xmax/5
   }
+  if(parname == 'w')
+    xbreaks <- c(0, 0.003, 0.006, 0.01)
+  else
+    xbreaks <- seq(0, xmax, by=xstep)
   gg <- gg+scale_x_continuous(name=parse(text=parname),
-                              breaks=seq(0, xmax, by=xstep),
+                              limits=c(0, xmax*xpad),
+                              breaks=xbreaks,
                               expand=c(0, 0))
-  gg <- gg+scale_y_continuous(name='Negative log-likelihood',
-                              breaks=seq(0, 10, by=2),
+  gg <- gg+scale_y_continuous(name='Negative Log-Likelihood',
+                              limits=c(-1, ymax),
+                              breaks=seq(0, ymax, by=2),
                               expand=c(0, 0))
-  gg <- gg+coord_cartesian(xlim=c(0, xmax), ylim=c(-1, 10))
+  if(!is.na(letter)){
+    xlet <- ifelse(parname == 'w', -0.003, -0.3)
+    xlet <- ifelse(parname == 'lambda' & xmax == 5, -1.5, xlet)
+    gg <- gg+annotation_custom(grob=textGrob(label=paste0(letter, ')'),
+                                             hjust=1),
+                               xmin=xlet,
+                               xmax=xlet,
+                               ymin=ymax+1,
+                               ymax=ymax+1)
+  }
   return(gg)
+}
+
+if(aje_formatted){
+  ppanel_a <- ppanel(x.vec, p.grid, p.like, 'psi', letter='A')
+  ppanel_b <- ppanel(x.vec, p.grid, p.like, 'lambda', letter='B')
+  ppanel_c <- ppanel(x.vec, p.grid, p.like, 'w', letter='C')
+  ppanel_d <- ppanel(x.vec, p.grid, p.like, 'beta', letter='D')
+  panel_list <- list(ppanel_a, ppanel_b, ppanel_c, ppanel_d)
+  ajeformat(panel_list, 2)
 }
 
 grid.arrange(ppanel(x.vec, p.grid, p.like, 'psi'),
@@ -529,13 +639,16 @@ grid.arrange(ppanel(x.vec, p.grid, p.like, 'psi'),
 
 \newpage
 
-```{r figure2, echo=FALSE}
+```{r figure3, echo=FALSE}
 ##################################################
 # Illustrate heatmaps of runs achieving API and
 # runs rejecting H0: psi=0 with follow-up to
 # specified ages
 ##################################################
-apiplot <- function(dset, par1, par2, responses){
+apiplot <- function(dset,
+                    par1='psi',
+                    par2='lambda',
+                    responses=c('IdM', 'LRM')){
   melted <- melt(dset, id.vars=c(par1, par2, 'followup'))
   melted <- rename(melted, c(variable='response', value='proportion'))
   melted <- subset(melted, response %in% responses)
@@ -571,6 +684,50 @@ apiplot <- function(dset, par1, par2, responses){
   print(gg)
 }
 
+apipanel <- function(dset,
+                     Followup,
+                     Response,
+                     par1='psi',
+                     par2='lambda',
+                     ymax=2.9,
+                     letter=NA){
+  melted <- melt(dset, id.vars=c(par1, par2, 'followup'))
+  melted <- rename(melted, c(variable='response', value='proportion'))
+  melted <- subset(melted, followup == Followup & response == Response)
+  gg_theme(axis.line=element_blank(),
+           axis.title.y=element_text(size=12, angle=0, vjust=0.5),
+           legend.position='none')
+  gg <- ggplot(data=melted, aes_string(x=par1, y=par2))
+  gg <- gg+geom_raster(aes(fill=proportion), interpolate=FALSE)
+  gg <- gg+scale_x_continuous(name=parse(text=par1),
+                              breaks=seq(0, 0.75, by=0.25),
+                              expand=c(0, 0))
+  gg <- gg+scale_y_log10(name=parse(text=par2),
+                         breaks=c(0.1, 0.5, 1.0, 2.0),
+                         expand=c(0, 0))
+  gg <- gg+scale_fill_gradient(name='',
+                               labels=percent_format(),
+                               low='black',
+                               high='white',
+                               limits=c(0, 1),
+                               expand=c(0, 0),
+                               guide=guide_colorbar(draw.ulim=FALSE,
+                                                    draw.llim=FALSE,
+                                                    label.hjust=1))
+  if(is.na(letter))
+    gg <- gg+theme(legend.position='right')
+  else {
+    xlet <- ifelse(par1 == 'w', -0.003, -0.3)
+    gg <- gg+annotation_custom(grob=textGrob(label=paste0(letter, ')'),
+                                             hjust=1),
+                               xmin=xlet,
+                               xmax=xlet,
+                               ymin=log10(ymax),
+                               ymax=log10(ymax))
+  }
+  return(gg)
+}
+
 ##################################################
 # Read and merge saved results of runs achieving
 # API and runs rejecting H0: psi=0 after 1 or 6
@@ -584,14 +741,25 @@ result_mat_55 <- transform(result_mat, IdM=IdM/max(IdM), LRM=LRM/max(LRM))
 
 dset <- rbind(transform(result_mat_55, followup=55),
               transform(result_mat_60, followup=60))
-apiplot(dset, par1='psi', par2='lambda', responses=c('IdM', 'LRM'))
+
+if(aje_formatted){
+  apipanel_a <- apipanel(dset, Followup=55, Response='IdM', letter='A')
+  apipanel_b <- apipanel(dset, Followup=60, Response='IdM', letter='B')
+  apipanel_c <- apipanel(dset, Followup=55, Response='LRM', letter='C')
+  apipanel_d <- apipanel(dset, Followup=60, Response='LRM', letter='D')
+  apipanel_k <- apipanel(dset, Followup=60, Response='LRM')
+  panel_list <- list(apipanel_a, apipanel_b, apipanel_c, apipanel_d)
+  ajeformat(panel_list, 3, panel_key=apipanel_k)
+}
+
+apiplot(dset)
 ```
 
 **FIGURE 3: Adequately Precise Identification (API) and type I/II errors.** Model performance over a range of values for the indolent fraction ($\psi$) and the progression rate of progressive cancers ($\lambda$) visualized as (top row) percentages of 100 simulations achieving joint API for all four model parameters and (bottom row) percentages of 100 simulations that reject the null hypothesis $\mathcal{H}_0: \psi=0$. Performance is visualized for 50,000 women screened annually at ages 50--54 years with follow-up to age 55 years (left column) and age 60 years (right column), assuming a constant risk of onset of preclinical cancer of $w=0.0025$ per year and sensitivity of screening to detect preclinical cancer of $\beta=80\%$.
 
 \newpage
 
-```{r figure3a, echo=FALSE, cache=TRUE}
+```{r figure4a, echo=FALSE, cache=TRUE}
 ##################################################
 # Read saved results of simulations achieving API
 ##################################################
@@ -617,7 +785,7 @@ psi.dat <- cbind(psi.dat, fu.years)
 ##################################################
 # Illustrate simulations achieving API
 ##################################################
-apanel <- function(dset, titulo){
+apanel <- function(dset, titulo, xmax=10, ymax=1, letter=NA){
   dset <- transform(dset, psi=factor(psi))
   gg_theme(legend.position='none')
   gg <- ggplot(data=dset)
@@ -631,14 +799,22 @@ apanel <- function(dset, titulo){
                           group=psi,
                           colour=psi),
                       size=4)
-  gg <- gg+scale_x_continuous(name='Years of follow-up',
-                              limits=c(0, 10),
-                              breaks=seq(0, 14, by=2))
-  gg <- gg+scale_y_continuous(name='Runs achieving API',
-                              limits=c(0, 1),
-                              breaks=seq(0, 1, by=0.2),
-                              labels=percent_format())
-  gg <- gg+scale_colour_grey() + ggtitle(titulo)
+  gg <- gg+scale_x_continuous(name='Years of Follow-up',
+                              limits=c(0, xmax),
+                              breaks=seq(0, xmax, by=2))
+  gg <- gg+scale_y_continuous(name='% of Runs Achieving API',
+                              limits=c(0, ymax),
+                              breaks=seq(0, ymax, by=0.2))
+  gg <- gg+scale_colour_grey()
+  if(is.na(letter))
+    gg <- gg+ggtitle(titulo)
+  else
+    gg <- gg+annotation_custom(grob=textGrob(label=paste0(letter, ')'),
+                                             hjust=1),
+                               xmin=-4,
+                               xmax=-4,
+                               ymin=ymax+0.1,
+                               ymax=ymax+0.1)
   return(gg)
 }
 
@@ -646,7 +822,7 @@ aaa <- psi.dat
 #print(apanel(psi.dat))
 ```
 
-```{r figure3b, echo=FALSE, cache=TRUE}
+```{r figure4b, echo=FALSE, cache=TRUE}
 ##################################################
 # Read saved results of simulations achieving API
 ##################################################
@@ -674,7 +850,17 @@ psi.dat <- cbind(psi.dat, fu.years)
 # 6 months or 4 years using multiplot
 ##################################################
 bbb <- psi.dat
-multiplot(apanel(aaa, "MST of 6 months"), apanel(bbb, "MST of 4 years"), cols=2)
+
+if(aje_formatted){
+  apanel_a <- apanel(aaa, letter='A')
+  apanel_b <- apanel(bbb, letter='B')
+  panel_list <- list(apanel_a, apanel_b)
+  ajeformat(panel_list, 4, nrows=1)
+}
+
+multiplot(apanel(aaa, 'MST of 6 months'),
+          apanel(bbb, 'MST of 4 years'),
+          cols=2)
 ```
 
 **FIGURE 4: API as a function of follow up.** Percentages of 100 simulations achieving joint API for all four model parameters in a stop-screen trial with 50,000 women screened annually at ages 50--54 years, by years of follow-up after the last screen. Mean sojourn time is (left panel) 6 months and (right panel) 4 years. Lines connect evaluations under $\psi$ set equal to (dark) 20%, (medium) 40%, and (light) 60%, assuming a constant rate of onset of preclinical cancer of $w=0.0025$ per year and sensitivity of screening to detect preclinical cancer of $\beta=80\%$.
@@ -736,7 +922,7 @@ p.psi.4 <- pframe(p.grid, p.like, 'psi', 4)
 p.lambda.4 <- pframe(p.grid, p.like, 'lambda', 4)
 ```
 
-```{r figure4, cache=TRUE, echo=FALSE}
+```{r figure5, cache=TRUE, echo=FALSE}
 ##################################################
 # Merged results across simulations
 ##################################################
@@ -746,7 +932,31 @@ p.lambda <- rbind(p.lambda.1, p.lambda.2, p.lambda.3, p.lambda.4)
 ##################################################
 # Illustrate profile likelihoods
 ##################################################
-spanel <- function(x.vec, dset, parname){
+spanel <- function(x.vec,
+                   dset,
+                   parname,
+                   ymax=10,
+                   xpad=1.05,
+                   letter=NA){
+  lset <- plyr::ddply(dset,
+                      'simulation',
+                      function(x)
+                        with(subset(x, param < param[which.min(NLL)]),
+                             data.frame(param=approx(NLL, param, xout=ymax)$y,
+                                        NLL=ymax,
+                                        simulation=unique(simulation))))
+  if(parname == 'psi')
+    uset <- plyr::ddply(dset,
+                        'simulation',
+                        function(x)
+                          with(subset(x, param > param[which.min(NLL)]),
+                               data.frame(param=approx(NLL, param, xout=ymax)$y,
+                                          NLL=ymax,
+                                          simulation=unique(simulation))))
+  else
+    uset <- NULL
+  dset <- rbind(dset, lset, uset)
+  dset <- subset(dset, NLL <= ymax)
   dset <- transform(dset, simulation=factor(simulation))
   gg_theme(legend.position='none')
   gg <- ggplot(data=dset)
@@ -765,15 +975,31 @@ spanel <- function(x.vec, dset, parname){
                       size=0.75)
   xmax <- switch(parname, 'psi'=1, 'lambda'=20, 'w'=0.01, 'beta'=1)
   xstep <- switch(parname, 'psi'=0.2, 'lambda'=5, 'w'=0.002, 'beta'=0.2)
+  xlet <- switch(parname, 'psi'=-0.3, 'lambda'=-6, 'w'=-0.004, 'beta'=-0.4)
   gg <- gg+scale_x_continuous(name=parse(text=parname),
+                              limits=c(0, xmax*xpad),
                               breaks=seq(0, xmax, by=xstep),
                               expand=c(0, 0))
-  gg <- gg+scale_y_continuous(name='Negative log-likelihood',
+  gg <- gg+scale_y_continuous(name='Negative Log-Likelihood',
+                              limits=c(-0.5, ymax),
                               breaks=seq(0, 100, by=2),
                               expand=c(0, 0))
-  gg <- gg+coord_cartesian(xlim=c(0, xmax), ylim=c(-.5, 10))
   gg <- gg+scale_colour_grey(name='')
+  if(!is.na(letter))
+    gg <- gg+annotation_custom(grob=textGrob(label=paste0(letter, ')'),
+                                             hjust=1),
+                               xmin=xlet,
+                               xmax=xlet,
+                               ymin=ymax+1,
+                               ymax=ymax+1)
   return(gg)
+}
+
+if(aje_formatted){
+  spanel_a <- spanel(x.vec, p.psi, 'psi', letter='A')
+  spanel_b <- spanel(x.vec, p.lambda, 'lambda', letter='B')
+  panel_list <- list(spanel_a, spanel_b)
+  ajeformat(panel_list, 5, nrows=1)
 }
 
 grid.arrange(spanel(x.vec, p.psi, 'psi'),
@@ -785,7 +1011,7 @@ grid.arrange(spanel(x.vec, p.psi, 'psi'),
 
 \newpage
 
-```{r figure5, cache=TRUE, echo=FALSE}
+```{r figure6, cache=TRUE, echo=FALSE}
 ##################################################
 # Simulation study parameters
 ##################################################
@@ -801,7 +1027,12 @@ mis.dat <- transform(result_mat, psi=as.numeric(as.character(psi)))
 ##################################################
 # Illustrate estimates under mis-specified model
 ##################################################
-mpanel <- function(x.vec, dset, parname){
+mpanel <- function(x.vec,
+                   dset,
+                   parname,
+                   letter=NA){
+  yspan <- diff(range(dset[[parname]]))
+  ymax <- max(dset[[parname]])+0.15*yspan
   gg_theme(axis.title.y=element_text(angle=0))
   gg <- ggplot(data=dset)
   gg <- gg+geom_hline(yintercept=x.vec[parname],
@@ -812,10 +1043,33 @@ mpanel <- function(x.vec, dset, parname){
                                   y=parname,
                                   group='psi'))
   gg <- gg+scale_x_continuous(name=parse(text='psi'),
-                              limits=c(-0.1, 1),
+                              limits=c(-0.1, 1.1),
                               breaks=seq(0, 1, by=0.2))
-  gg <- gg+scale_y_continuous(name=parse(text=parname))
+  if(parname == 'w'){
+    ybreaks <- seq(0.0023, 0.0035, by=0.0002)
+    gg <- gg+scale_y_continuous(name=parse(text=parname),
+                                limits=c(0.0022, 0.0036),
+                                breaks=ybreaks)
+  } else
+    gg <- gg+scale_y_continuous(name=parse(text=parname))
+  if(!is.na(letter)){
+    xlet <- ifelse(parname == 'w', -0.8, -0.6)
+    gg <- gg+annotation_custom(grob=textGrob(label=paste0(letter, ')'),
+                                             hjust=1),
+                               xmin=xlet,
+                               xmax=xlet,
+                               ymin=ymax,
+                               ymax=ymax)
+  }
   return(gg)
+}
+
+if(aje_formatted){
+  mpanel_a <- mpanel(x.vec, mis.dat, 'w', letter='A')
+  mpanel_b <- mpanel(x.vec, mis.dat, 'lambda', letter='B')
+  mpanel_c <- mpanel(x.vec, mis.dat, 'beta', letter='C')
+  panel_list <- list(mpanel_a, mpanel_b, mpanel_c)
+  ajeformat(panel_list, 6, nrows=1, ncols=3)
 }
 
 grid.arrange(mpanel(x.vec, mis.dat, 'w'),
@@ -828,7 +1082,7 @@ grid.arrange(mpanel(x.vec, mis.dat, 'w'),
 
 \newpage
 
-```{r figure-cnbss-profile-likelihoods, results='asis'}
+```{r figure7, results='asis'}
 ##################################################
 # Analysis of CNBSS-2 for Ages 50-59
 # Onset at age 45
@@ -860,6 +1114,15 @@ p.like <- plikelihood(x0, xl, xu, t.vec, cnbss.combo, clin.FU, p.grid, f.like)
 ##################################################
 # Illustrate mixture model profile likelihoods
 ##################################################
+if(aje_formatted){
+  ppanel_a <- ppanel(f.like$params, p.grid, p.like, 'psi', xmax=1, letter='A')
+  ppanel_b <- ppanel(f.like$params, p.grid, p.like, 'lambda', xmax=5, letter='B')
+  ppanel_c <- ppanel(f.like$params, p.grid, p.like, 'w', letter='C')
+  ppanel_d <- ppanel(f.like$params, p.grid, p.like, 'beta', letter='D')
+  panel_list <- list(ppanel_a, ppanel_b, ppanel_c, ppanel_d)
+  ajeformat(panel_list, 7)
+}
+
 mixture <- arrangeGrob(ppanel(f.like$params, p.grid, p.like, 'psi', xmax=1),
                        ppanel(f.like$params, p.grid, p.like, 'lambda', xmax=5),
                        ppanel(f.like$params, p.grid, p.like, 'w'),
@@ -881,6 +1144,7 @@ plot(mixture)
 ## SUPPLEMENTARY FIGURES AND TABLES
 
 ```{r cnbss2-data-table, results='asis', echo=FALSE}
+warning('Supplemental tables and figures not reviewed after changes for AJE format')
 # Like Table 1 in Shen et al. (2017) but including 5th screening round
 source('trials_FU.R')
 cnbprint <- data.frame(Round=c(1, 2, 3, 4, 5))
