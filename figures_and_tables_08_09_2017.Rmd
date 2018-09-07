@@ -23,7 +23,7 @@ library(gridExtra)
 opts_chunk$set(echo=FALSE,
                message=FALSE,
                warning=FALSE,
-               cache=TRUE,
+               cache=FALSE,
                fig.width=6,
                fig.asp=1,
                out.width='100%')
@@ -362,8 +362,9 @@ gg_theme <- function(...){
                axis.text=element_text(colour='black', size=12),
                axis.title=element_text(size=12),
                axis.title.y=element_text(size=12, angle=90, vjust=0.5),
-               axis.line=element_line(size=1, colour='black'),
-               axis.ticks=element_line(size=1, colour='black'),
+               axis.line=element_line(size=0.25, colour='black'),
+               axis.ticks=element_line(size=0.25, colour='black'),
+               axis.ticks.length=unit(0.12, 'cm'),
                strip.background=element_rect(fill=NA, colour=NA),
                strip.text.x=element_text(angle=0, size=12),
                plot.margin=unit(c(2, 1, 1, 2), 'lines'))
@@ -695,7 +696,6 @@ apipanel <- function(dset,
   melted <- rename(melted, c(variable='response', value='proportion'))
   melted <- subset(melted, followup == Followup & response == Response)
   gg_theme(axis.line=element_blank(),
-           axis.title.y=element_text(size=12, angle=0, vjust=0.5),
            legend.position='none')
   gg <- ggplot(data=melted, aes_string(x=par1, y=par2))
   gg <- gg+geom_raster(aes(fill=proportion), interpolate=FALSE)
@@ -759,7 +759,7 @@ apiplot(dset)
 
 \newpage
 
-```{r figure4a, echo=FALSE, cache=TRUE}
+```{r figure4a, echo=FALSE, cache=FALSE}
 ##################################################
 # Read saved results of simulations achieving API
 ##################################################
@@ -798,11 +798,12 @@ apanel <- function(dset, titulo, xmax=10, ymax=1, letter=NA){
                           y=api/100,
                           group=psi,
                           colour=psi),
-                      size=4)
+                      size=3)
   gg <- gg+scale_x_continuous(name='Years of Follow-up',
                               limits=c(0, xmax),
                               breaks=seq(0, xmax, by=2))
   gg <- gg+scale_y_continuous(name='% of Runs Achieving API',
+                              labels=function(x) x*100,
                               limits=c(0, ymax),
                               breaks=seq(0, ymax, by=0.2))
   gg <- gg+scale_colour_grey()
@@ -822,7 +823,7 @@ aaa <- psi.dat
 #print(apanel(psi.dat))
 ```
 
-```{r figure4b, echo=FALSE, cache=TRUE}
+```{r figure4b, echo=FALSE, cache=FALSE}
 ##################################################
 # Read saved results of simulations achieving API
 ##################################################
@@ -867,7 +868,7 @@ multiplot(apanel(aaa, 'MST of 6 months'),
 
 \newpage
 
-```{r simulations, cache=TRUE, echo=FALSE}
+```{r simulations, cache=FALSE, echo=FALSE}
 ##################################################
 # Fixed simulation study parameters
 ##################################################
@@ -922,7 +923,7 @@ p.psi.4 <- pframe(p.grid, p.like, 'psi', 4)
 p.lambda.4 <- pframe(p.grid, p.like, 'lambda', 4)
 ```
 
-```{r figure5, cache=TRUE, echo=FALSE}
+```{r figure5, cache=FALSE, echo=FALSE}
 ##################################################
 # Merged results across simulations
 ##################################################
@@ -1011,7 +1012,7 @@ grid.arrange(spanel(x.vec, p.psi, 'psi'),
 
 \newpage
 
-```{r figure6, cache=TRUE, echo=FALSE}
+```{r figure6, cache=FALSE, echo=FALSE}
 ##################################################
 # Simulation study parameters
 ##################################################
@@ -1033,7 +1034,7 @@ mpanel <- function(x.vec,
                    letter=NA){
   yspan <- diff(range(dset[[parname]]))
   ymax <- max(dset[[parname]])+0.15*yspan
-  gg_theme(axis.title.y=element_text(angle=0))
+  gg_theme()
   gg <- ggplot(data=dset)
   gg <- gg+geom_hline(yintercept=x.vec[parname],
                       linetype='dashed',
