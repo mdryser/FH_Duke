@@ -1046,13 +1046,16 @@ mpanel <- function(x.vec,
   gg <- gg+scale_x_continuous(name=parse(text='psi'),
                               limits=c(-0.1, 1.1),
                               breaks=seq(0, 1, by=0.2))
-  if(parname == 'w'){
-    ybreaks <- seq(0.0023, 0.0035, by=0.0002)
-    gg <- gg+scale_y_continuous(name=parse(text=parname),
-                                limits=c(0.0022, 0.0036),
-                                breaks=ybreaks)
-  } else
-    gg <- gg+scale_y_continuous(name=parse(text=parname))
+  if(parname == 'w')
+    ybreaks <- seq(0.0020, 0.0040, by=0.0005)
+  if(parname == 'lambda')
+    ybreaks <- seq(0.0, 0.6, by=0.1)
+  if(parname == 'beta')
+    ybreaks <- seq(0.6, 1.0, by=0.1)
+  gg <- gg+scale_y_continuous(name=parse(text=parname),
+                              limits=range(ybreaks),
+                              breaks=ybreaks,
+                              expand=c(0, 0))
   if(!is.na(letter)){
     xlet <- ifelse(parname == 'w', -0.8, -0.6)
     gg <- gg+annotation_custom(grob=textGrob(label=paste0(letter, ')'),
